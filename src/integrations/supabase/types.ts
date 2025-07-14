@@ -135,6 +135,48 @@ export type Database = {
           },
         ]
       }
+      trades: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          image_url: string | null
+          notes: string | null
+          result: string
+          rr: number | null
+          session: string
+          strategy_tag: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          image_url?: string | null
+          notes?: string | null
+          result: string
+          rr?: number | null
+          session: string
+          strategy_tag?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          image_url?: string | null
+          notes?: string | null
+          result?: string
+          rr?: number | null
+          session?: string
+          strategy_tag?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           created_at: string

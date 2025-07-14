@@ -8,9 +8,12 @@ import {
   FileText,
   TrendingUp,
   Clock,
-  Globe
+  Globe,
+  LogOut
 } from "lucide-react"
 import { NavLink, useLocation } from "react-router-dom"
+import { useAuth } from "@/contexts/AuthContext"
+import { Button } from "@/components/ui/button"
 
 import {
   Sidebar,
@@ -45,6 +48,7 @@ const otherItems = [
 
 export function AppSidebar() {
   const { state } = useSidebar()
+  const { signOut } = useAuth()
   const location = useLocation()
   const currentPath = location.pathname
   const collapsed = state === "collapsed"
@@ -148,6 +152,12 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={signOut} className="text-destructive hover:bg-destructive/10">
+                  <LogOut className="w-4 h-4" />
+                  {!collapsed && <span>Logout</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
