@@ -36,7 +36,8 @@ const PublicTrade = () => {
           .from('trades')
           .select('id, date, session, strategy_tag, result, rr, notes, image_url, created_at')
           .eq('id', tradeId)
-          .single() as { data: PublicTrade | null, error: any };
+          .eq('is_public', true)
+          .single();
 
         if (error) throw error;
 

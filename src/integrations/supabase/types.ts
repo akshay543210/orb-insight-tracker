@@ -178,6 +178,7 @@ export type Database = {
           date: string
           id: string
           image_url: string | null
+          is_public: boolean
           notes: string | null
           result: string
           rr: number | null
@@ -192,6 +193,7 @@ export type Database = {
           date?: string
           id?: string
           image_url?: string | null
+          is_public?: boolean
           notes?: string | null
           result: string
           rr?: number | null
@@ -206,6 +208,7 @@ export type Database = {
           date?: string
           id?: string
           image_url?: string | null
+          is_public?: boolean
           notes?: string | null
           result?: string
           rr?: number | null

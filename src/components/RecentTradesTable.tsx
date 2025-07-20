@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2, Plus, Share2, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,6 +39,7 @@ export function RecentTradesTable({ trades, onTradeUpdate }: RecentTradesTablePr
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [copiedTradeId, setCopiedTradeId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     date: '',
@@ -163,6 +164,41 @@ export function RecentTradesTable({ trades, onTradeUpdate }: RecentTradesTablePr
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : 'Failed to delete trade',
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShare = async (tradeId: string) => {
+    try {
+      // Toggle the is_public status
+      const { error } = await supabase
+        .from('trades')
+        .update({ is_public: true })
+        .eq('id', tradeId);
+
+      if (error) throw error;
+
+      // Generate shareable link
+      const shareUrl = `${window.location.origin}/trade/${tradeId}`;
+      
+      // Copy to clipboard
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedTradeId(tradeId);
+      
+      toast({
+        title: "Share Link Copied!",
+        description: "Trade link has been copied to clipboard and made public.",
+      });
+
+      // Reset copied state after 2 seconds
+      setTimeout(() => setCopiedTradeId(null), 2000);
+      
+    } catch (err) {
+      console.error('Error sharing trade:', err);
+      toast({
+        title: "Error",
+        description: "Failed to share trade",
         variant: "destructive",
       });
     }
@@ -364,6 +400,19 @@ export function RecentTradesTable({ trades, onTradeUpdate }: RecentTradesTablePr
                         className="h-8 w-8 p-0"
                       >
                         <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleShare(trade.id)}
+                        className="h-8 w-8 p-0"
+                        title="Share trade publicly"
+                      >
+                        {copiedTradeId === trade.id ? (
+                          <Check className="h-4 w-4 text-success" />
+                        ) : (
+                          <Share2 className="h-4 w-4" />
+                        )}
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
