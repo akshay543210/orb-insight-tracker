@@ -194,6 +194,32 @@ export function useAccounts() {
     }
   }, [user, accounts, loading]);
 
+  // Real-time subscription for account updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('account-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'accounts',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          // Refetch accounts when any change occurs
+          fetchAccounts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   return {
     accounts,
     loading,

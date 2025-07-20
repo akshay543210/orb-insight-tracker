@@ -18,6 +18,7 @@ import Settings from "./pages/Settings";
 import Help from "./pages/Help";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import PublicTrade from "./pages/PublicTrade";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/trade/:tradeId" element={<PublicTrade />} />
             <Route path="/*" element={
               <ProtectedRoute>
                 <SidebarProvider>
