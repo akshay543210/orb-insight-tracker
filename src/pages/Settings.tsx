@@ -48,6 +48,7 @@ const Settings = () => {
     await updateAccount(editingAccount.id, {
       name: editingAccount.name,
       current_balance: balance,
+      starting_balance: parseFloat(editingAccount.starting_balance) || 0,
       risk_per_trade: risk,
     })
     setEditingAccount(null)
@@ -319,6 +320,16 @@ const Settings = () => {
                   type="number"
                   value={editingAccount.current_balance}
                   onChange={(e) => setEditingAccount({...editingAccount, current_balance: parseFloat(e.target.value) || 0})}
+                  className="bg-input border-border text-card-foreground"
+                />
+              </div>
+              <div>
+                <Label htmlFor="editStartingBalance" className="text-card-foreground">Starting Balance ($)</Label>
+                <Input
+                  id="editStartingBalance"
+                  type="number"
+                  value={editingAccount.starting_balance}
+                  onChange={(e) => setEditingAccount({...editingAccount, starting_balance: parseFloat(e.target.value) || 0})}
                   className="bg-input border-border text-card-foreground"
                 />
               </div>
