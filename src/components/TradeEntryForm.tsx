@@ -13,9 +13,10 @@ import { Upload, X } from 'lucide-react';
 interface TradeEntryFormProps {
   onSuccess?: () => void;
   defaultSession?: string;
+  onTradeAdded?: () => void;
 }
 
-export function TradeEntryForm({ onSuccess, defaultSession }: TradeEntryFormProps) {
+export function TradeEntryForm({ onSuccess, defaultSession, onTradeAdded }: TradeEntryFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -125,6 +126,7 @@ export function TradeEntryForm({ onSuccess, defaultSession }: TradeEntryFormProp
         setImagePreview(null);
         
         onSuccess?.();
+        onTradeAdded?.();
       }
     } catch (error) {
       toast({

@@ -4,57 +4,60 @@ import { TradingTable } from "@/components/TradingTable"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts'
 import { TrendingUp, TrendingDown, Target, Calendar, DollarSign } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useTrades } from "@/hooks/useTrades"
 
-// Sample data - in real app this would come from a database
-const equityCurveData = [
-  { date: 'Dec 1', value: 10000 },
-  { date: 'Dec 8', value: 9850 },
-  { date: 'Jan 6', value: 10208 },
-  { date: 'Jan 12', value: 10093 },
-  { date: 'Feb 12', value: 10093 },
-  { date: 'Mar 17', value: 10093 },
-]
-
-const sampleTrades = [
-  {
-    id: '1',
-    date: '3/11/2022',
-    session: 'PLTR',
-    symbol: 'PLTR',
-    side: 'LONG' as const,
-    entry: 10.80,
-    exit: 11.80,
-    rr: 2,
-    result: 'WIN' as const,
-    pnl: 50.00
-  },
-  {
-    id: '2', 
-    date: '3/10/2022',
-    session: 'BROS',
-    symbol: 'BROS',
-    side: 'LONG' as const,
-    entry: 44.16,
-    exit: 49.00,
-    rr: 2.5,
-    result: 'WIN' as const,
-    pnl: 242.00
-  },
-  {
-    id: '3',
-    date: '11/9/2021',
-    session: 'PLTR',
-    symbol: 'PLTR', 
-    side: 'LONG' as const,
-    entry: 26.89,
-    exit: 25.90,
-    rr: 1.5,
-    result: 'LOSS' as const,
-    pnl: -198.00
+// Generate equity curve from real trades data
+const generateEquityCurve = (trades: any[]) => {
+  if (trades.length === 0) {
+    return [{ date: 'Start', value: 0 }]
   }
-]
+
+  // Sort trades by date
+  const sortedTrades = [...trades].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  
+  let runningTotal = 0
+  const equityData = [{ date: 'Start', value: 0 }]
+  
+  sortedTrades.forEach(trade => {
+    const rr = trade.rr || 0
+    if (trade.result.toLowerCase() === 'win') {
+      runningTotal += rr
+    } else if (trade.result.toLowerCase() === 'loss') {
+      runningTotal -= rr
+    }
+    // breakeven doesn't change the total
+    
+    equityData.push({
+      date: new Date(trade.date).toLocaleDateString(),
+      value: runningTotal
+    })
+  })
+  
+  return equityData
+}
 
 const Index = () => {
+  const { trades, calculateStats, loading } = useTrades()
+  const stats = calculateStats()
+
+  // Generate equity curve from trades
+  const equityCurveData = generateEquityCurve(trades)
+
+  // Transform trades data to the format expected by TradingTable
+  const transformedTrades = trades.map(trade => ({
+    id: trade.id,
+    date: new Date(trade.date).toLocaleDateString(),
+    session: trade.session,
+    symbol: trade.strategy_tag || 'N/A',
+    side: 'LONG' as const, // We don't have side in our schema, defaulting to LONG
+    entry: 0, // We don't have entry/exit prices, just R/R
+    exit: 0,
+    rr: trade.rr || 0,
+    result: trade.result.toUpperCase() as 'WIN' | 'LOSS',
+    pnl: (trade.rr || 0) * 100, // Approximating PnL from R/R
+    notes: trade.notes
+  }))
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -64,55 +67,58 @@ const Index = () => {
           <p className="text-muted-foreground">Track your ORB trading performance</p>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-bold text-success">$94.00</div>
-          <div className="text-sm text-success">0.0%</div>
+          <div className="text-2xl font-bold text-success">
+            {stats.totalRR > 0 ? '+' : ''}{stats.totalRR.toFixed(1)}R
+          </div>
+          <div className="text-sm text-muted-foreground">Total Risk/Reward</div>
         </div>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-        <StatsCard
-          title="WINS"
-          value="2"
-          change="67%"
-          positive={true}
-          icon={<TrendingUp className="w-5 h-5" />}
-        />
-        <StatsCard
-          title="LOSSES"
-          value="1"
-          change="33%"
-          positive={false}
-          icon={<TrendingDown className="w-5 h-5" />}
-        />
-        <StatsCard
-          title="OPEN"
-          value="0"
-          change="0%"
-          icon={<Target className="w-5 h-5" />}
-        />
-        <StatsCard
-          title="AVG W"
-          value="$146"
-          change="10%"
-          positive={true}
-          icon={<DollarSign className="w-5 h-5" />}
-        />
-        <StatsCard
-          title="AVG L"
-          value="-$198"
-          change="-4%"
-          positive={false}
-          icon={<DollarSign className="w-5 h-5" />}
-        />
-        <StatsCard
-          title="PnL"
-          value="$94.00"
-          change="0.0%"
-          positive={true}
-          icon={<TrendingUp className="w-5 h-5" />}
-        />
-      </div>
+      {loading ? (
+        <div className="text-center py-8 text-muted-foreground">Loading trades...</div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+          <StatsCard
+            title="WINS"
+            value={stats.wins.toString()}
+            change={`${stats.winRate.toFixed(0)}%`}
+            positive={true}
+            icon={<TrendingUp className="w-5 h-5" />}
+          />
+          <StatsCard
+            title="LOSSES"
+            value={stats.losses.toString()}
+            change={`${(100 - stats.winRate).toFixed(0)}%`}
+            positive={false}
+            icon={<TrendingDown className="w-5 h-5" />}
+          />
+          <StatsCard
+            title="BREAKEVEN"
+            value={stats.breakevens.toString()}
+            change={`${stats.totalTrades > 0 ? ((stats.breakevens / stats.totalTrades) * 100).toFixed(0) : 0}%`}
+            icon={<Target className="w-5 h-5" />}
+          />
+          <StatsCard
+            title="AVG WIN"
+            value={`${stats.avgWinRR.toFixed(1)}R`}
+            positive={true}
+            icon={<DollarSign className="w-5 h-5" />}
+          />
+          <StatsCard
+            title="AVG LOSS"
+            value={`-${stats.avgLossRR.toFixed(1)}R`}
+            positive={false}
+            icon={<DollarSign className="w-5 h-5" />}
+          />
+          <StatsCard
+            title="TOTAL"
+            value={`${stats.totalRR > 0 ? '+' : ''}${stats.totalRR.toFixed(1)}R`}
+            positive={stats.totalRR >= 0}
+            icon={<TrendingUp className="w-5 h-5" />}
+          />
+        </div>
+      )}
 
       {/* Equity Curve */}
       <Card className="bg-gradient-card shadow-card border-border">
@@ -132,7 +138,8 @@ const Index = () => {
                 <YAxis 
                   stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
-                  domain={['dataMin - 100', 'dataMax + 100']}
+                  domain={stats.totalTrades > 0 ? ['dataMin - 1', 'dataMax + 1'] : [0, 1]}
+                  label={{ value: 'R/R', angle: -90, position: 'insideLeft' }}
                 />
                 <Line 
                   type="monotone" 
@@ -148,18 +155,19 @@ const Index = () => {
       </Card>
 
       {/* Trades Table */}
-      <TradingTable trades={sampleTrades} />
+      <TradingTable trades={transformedTrades} />
 
-      {/* Demo Notice */}
-      <Card className="bg-destructive/10 border-destructive/20">
-        <CardContent className="p-4">
-          <p className="text-destructive text-sm text-center">
-            THE ABOVE TRADES ARE FOR DEMO PURPOSES. YOU MAY ADD YOUR OWN 
-            TRADES BY CLICKING ON THE "+" BUTTON IN THE SIDEBAR TO THE LEFT. THE 
-            DEMO TRADES WILL GO AWAY ON THEIR OWN AFTER YOU LOG A TRADE.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Demo Notice - only show if no trades */}
+      {stats.totalTrades === 0 && (
+        <Card className="bg-destructive/10 border-destructive/20">
+          <CardContent className="p-4">
+            <p className="text-destructive text-sm text-center">
+              NO TRADES LOGGED YET. START BY ADDING TRADES IN THE TRADING SESSIONS 
+              (ASIA, LONDON, NY OPEN, NY CLOSE) TO SEE YOUR STATISTICS HERE.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

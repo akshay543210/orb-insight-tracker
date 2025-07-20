@@ -3,9 +3,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { useTrades } from "@/hooks/useTrades"
 
 const Calendar = () => {
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 6)) // July 2025
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const { trades, calculateStats, loading } = useTrades()
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay()
@@ -17,11 +19,28 @@ const Calendar = () => {
   
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
-  // Sample trade data - in real app this would come from a database
-  const tradeData: Record<string, "win" | "loss" | "breakeven"> = {
-    "14": "win",
-    "21": "loss",
-    "28": "win"
+  // Get trades for the current month
+  const getTradesForDay = (day: number) => {
+    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+    const dateStr = date.toDateString()
+    
+    return trades.filter(trade => {
+      const tradeDate = new Date(trade.date)
+      return tradeDate.toDateString() === dateStr
+    })
+  }
+
+  const getDayResult = (dayTrades: any[]) => {
+    if (dayTrades.length === 0) return null
+    
+    const wins = dayTrades.filter(t => t.result.toLowerCase() === 'win').length
+    const losses = dayTrades.filter(t => t.result.toLowerCase() === 'loss').length
+    const breakevens = dayTrades.filter(t => t.result.toLowerCase() === 'breakeven').length
+    
+    if (wins > losses && wins > breakevens) return "win"
+    if (losses > wins && losses > breakevens) return "loss"
+    if (breakevens > 0) return "breakeven"
+    return wins > losses ? "win" : "loss"
   }
 
   const navigateMonth = (direction: "prev" | "next") => {
@@ -37,8 +56,8 @@ const Calendar = () => {
   }
 
   const getDayColor = (day: number) => {
-    const dayStr = day.toString()
-    const tradeResult = tradeData[dayStr]
+    const dayTrades = getTradesForDay(day)
+    const tradeResult = getDayResult(dayTrades)
     
     if (!tradeResult) return "bg-card hover:bg-muted/50"
     
@@ -111,16 +130,21 @@ const Calendar = () => {
                 {/* Calendar days */}
                 {Array.from({ length: daysInMonth }, (_, i) => {
                   const day = i + 1
+                  const dayTrades = getTradesForDay(day)
                   return (
                     <div
                       key={day}
                       className={cn(
                         "p-2 h-16 border rounded-md cursor-pointer transition-colors",
-                        "flex items-center justify-center text-sm font-medium",
+                        "flex flex-col items-center justify-center text-sm font-medium",
                         getDayColor(day)
                       )}
+                      title={dayTrades.length > 0 ? `${dayTrades.length} trade(s)` : ''}
                     >
-                      {day}
+                      <span>{day}</span>
+                      {dayTrades.length > 0 && (
+                        <span className="text-xs opacity-70">{dayTrades.length}</span>
+                      )}
                     </div>
                   )
                 })}
@@ -136,29 +160,37 @@ const Calendar = () => {
               <CardTitle className="text-lg text-card-foreground">Weekly Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-success">$94.00</div>
-                <div className="text-sm text-success">0.0%</div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Trades</span>
-                  <span className="text-card-foreground">3</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Win Rate</span>
-                  <span className="text-card-foreground">67%</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Best Day</span>
-                  <span className="text-success">+$242</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Worst Day</span>
-                  <span className="text-destructive">-$198</span>
-                </div>
-              </div>
+              {loading ? (
+                <div className="text-center text-muted-foreground">Loading...</div>
+              ) : (
+                <>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-success">
+                      {calculateStats().totalRR > 0 ? '+' : ''}{calculateStats().totalRR.toFixed(1)}R
+                    </div>
+                    <div className="text-sm text-muted-foreground">Total R/R</div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Trades</span>
+                      <span className="text-card-foreground">{calculateStats().totalTrades}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Win Rate</span>
+                      <span className="text-card-foreground">{calculateStats().winRate.toFixed(0)}%</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Best Win</span>
+                      <span className="text-success">+{calculateStats().topWinRR.toFixed(1)}R</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Worst Loss</span>
+                      <span className="text-destructive">-{calculateStats().topLossRR.toFixed(1)}R</span>
+                    </div>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
