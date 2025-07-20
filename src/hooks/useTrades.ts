@@ -36,13 +36,20 @@ export interface TradeStats {
 export function useTrades() {
   const { user } = useAuth();
   const { accounts, getActiveAccount } = useAccounts();
-  const [trades, setTrades] = useState<Trade[]>([]);
+  const [allTrades, setAllTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const activeAccount = getActiveAccount();
+  
+  // Filter trades for active account only
+  const trades = activeAccount 
+    ? allTrades.filter(trade => trade.account_id === activeAccount.id)
+    : [];
+
   const fetchTrades = async () => {
     if (!user) {
-      setTrades([]);
+      setAllTrades([]);
       setLoading(false);
       return;
     }
@@ -57,7 +64,7 @@ export function useTrades() {
 
       if (error) throw error;
 
-      setTrades(data || []);
+      setAllTrades(data || []);
       setError(null);
     } catch (err) {
       console.error('Error fetching trades:', err);
@@ -70,6 +77,13 @@ export function useTrades() {
   useEffect(() => {
     fetchTrades();
   }, [user]);
+
+  // Refetch trades when active account changes
+  useEffect(() => {
+    if (activeAccount) {
+      fetchTrades();
+    }
+  }, [activeAccount?.id]);
 
   const calculatePnL = (trade: Trade, account?: Account): number => {
     if (!account) return 0;
