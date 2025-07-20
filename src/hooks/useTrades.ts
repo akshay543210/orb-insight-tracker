@@ -80,6 +80,18 @@ export function useTrades() {
 
   // Refetch trades when active account changes
   useEffect(() => {
+    const handleActiveAccountChange = () => {
+      fetchTrades();
+    };
+    
+    window.addEventListener('activeAccountChanged', handleActiveAccountChange);
+    
+    return () => {
+      window.removeEventListener('activeAccountChanged', handleActiveAccountChange);
+    };
+  }, []);
+  
+  useEffect(() => {
     if (activeAccount) {
       fetchTrades();
     }

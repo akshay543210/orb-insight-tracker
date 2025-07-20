@@ -254,6 +254,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      recalculate_account_balance: {
+        Args: { account_id_param: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

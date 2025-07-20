@@ -153,6 +153,10 @@ export function useAccounts() {
         .eq('id', accountId);
 
       await fetchAccounts();
+      
+      // Notify other hooks that active account changed
+      window.dispatchEvent(new CustomEvent('activeAccountChanged'));
+      
       toast({
         title: "Active Account Changed",
         description: "Active account has been updated.",
