@@ -236,16 +236,18 @@ const Settings = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {!account.is_active && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setActiveAccount(account.id)}
-                        className="border-border hover:bg-muted text-xs"
-                      >
-                        Set Active
-                      </Button>
-                    )}
+                    <Button
+                      variant={account.is_active ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setActiveAccount(account.id)}
+                      disabled={account.is_active}
+                      className={account.is_active ? 
+                        "bg-success hover:bg-success/90 text-success-foreground" : 
+                        "border-border hover:bg-muted text-xs"
+                      }
+                    >
+                      {account.is_active ? "Active" : "Set Active"}
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
