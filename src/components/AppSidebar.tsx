@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { 
   BarChart3, 
   Calendar, 
@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import { NavLink, useLocation } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
+import { useAccounts } from "@/hooks/useAccounts"
 import { Button } from "@/components/ui/button"
 
 import {
@@ -49,9 +50,24 @@ const otherItems = [
 export function AppSidebar() {
   const { state } = useSidebar()
   const { signOut } = useAuth()
+  const { getActiveAccount, refetchAccounts } = useAccounts()
   const location = useLocation()
   const currentPath = location.pathname
   const collapsed = state === "collapsed"
+  const activeAccount = getActiveAccount()
+
+  // Listen for active account changes
+  useEffect(() => {
+    const handleActiveAccountChange = () => {
+      refetchAccounts();
+    };
+    
+    window.addEventListener('activeAccountChanged', handleActiveAccountChange);
+    
+    return () => {
+      window.removeEventListener('activeAccountChanged', handleActiveAccountChange);
+    };
+  }, [refetchAccounts]);
 
   const isActive = (path: string) => currentPath === path
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
@@ -79,11 +95,21 @@ export function AppSidebar() {
         </div>
 
         {/* Portfolio Value */}
-        {!collapsed && (
+        {!collapsed && activeAccount && (
           <div className="p-4 border-b border-sidebar-border">
             <div className="text-sidebar-foreground/60 text-sm">Portfolio Value</div>
-            <div className="text-2xl font-bold text-sidebar-foreground">$10,093.00</div>
-            <div className="text-xs text-success">+$146.00 (1.5%)</div>
+            <div className="text-2xl font-bold text-sidebar-foreground">
+              ${activeAccount.current_balance.toLocaleString()}
+            </div>
+            <div className={`text-xs ${
+              activeAccount.current_balance >= activeAccount.starting_balance 
+                ? 'text-success' 
+                : 'text-destructive'
+            }`}>
+              {activeAccount.current_balance >= activeAccount.starting_balance ? '+' : ''}
+              ${(activeAccount.current_balance - activeAccount.starting_balance).toLocaleString()} 
+              ({activeAccount.name})
+            </div>
           </div>
         )}
 
