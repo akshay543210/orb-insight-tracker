@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } fro
 import { TrendingUp, TrendingDown, Target, Calendar, DollarSign } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useTrades } from "@/hooks/useTrades"
+import { useAccounts } from "@/hooks/useAccounts"
 
 // Generate equity curve from real trades data
 const generateEquityCurve = (trades: any[]) => {
@@ -37,8 +38,10 @@ const generateEquityCurve = (trades: any[]) => {
 }
 
 const Index = () => {
-  const { trades, calculateStats, loading } = useTrades()
+  const { trades, calculateStats, calculatePnL, loading } = useTrades()
+  const { getActiveAccount } = useAccounts()
   const stats = calculateStats()
+  const activeAccount = getActiveAccount()
 
   // Generate equity curve from trades
   const equityCurveData = generateEquityCurve(trades)
@@ -54,7 +57,7 @@ const Index = () => {
     exit: 0,
     rr: trade.rr || 0,
     result: trade.result.toUpperCase() as 'WIN' | 'LOSS',
-    pnl: (trade.rr || 0) * 100, // Approximating PnL from R/R
+    pnl: calculatePnL(trade, activeAccount), // Real P&L calculation based on account
     notes: trade.notes
   }))
 
@@ -68,9 +71,21 @@ const Index = () => {
         </div>
         <div className="text-right">
           <div className="text-2xl font-bold text-success">
-            {stats.totalRR > 0 ? '+' : ''}{stats.totalRR.toFixed(1)}R
+            {activeAccount ? `$${activeAccount.current_balance.toLocaleString()}` : '$0'}
           </div>
-          <div className="text-sm text-muted-foreground">Total Risk/Reward</div>
+          <div className="text-sm text-muted-foreground">
+            {activeAccount ? activeAccount.name : 'No Active Account'}
+          </div>
+          {activeAccount && (
+            <div className={`text-sm font-medium ${
+              activeAccount.current_balance >= activeAccount.starting_balance 
+                ? 'text-success' 
+                : 'text-destructive'
+            }`}>
+              P&L: {activeAccount.current_balance >= activeAccount.starting_balance ? '+' : ''}
+              ${(activeAccount.current_balance - activeAccount.starting_balance).toLocaleString()}
+            </div>
+          )}
         </div>
       </div>
 

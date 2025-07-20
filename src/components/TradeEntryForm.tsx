@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useAccounts } from '@/hooks/useAccounts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,7 +19,9 @@ interface TradeEntryFormProps {
 
 export function TradeEntryForm({ onSuccess, defaultSession, onTradeAdded }: TradeEntryFormProps) {
   const { user } = useAuth();
+  const { getActiveAccount } = useAccounts();
   const { toast } = useToast();
+  const activeAccount = getActiveAccount();
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -68,7 +71,23 @@ export function TradeEntryForm({ onSuccess, defaultSession, onTradeAdded }: Trad
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to add trades",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!activeAccount) {
+      toast({
+        title: "Error",
+        description: "No active trading account found. Please create an account in Settings.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setLoading(true);
     
@@ -92,6 +111,7 @@ export function TradeEntryForm({ onSuccess, defaultSession, onTradeAdded }: Trad
         .from('trades')
         .insert({
           user_id: user.id,
+          account_id: activeAccount.id,
           date: new Date(formData.date).toISOString(),
           session: formData.session,
           strategy_tag: formData.strategy_tag || null,

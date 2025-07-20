@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          created_at: string
+          current_balance: number
+          id: string
+          is_active: boolean
+          name: string
+          risk_per_trade: number
+          starting_balance: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_balance?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          risk_per_trade?: number
+          starting_balance?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_balance?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          risk_per_trade?: number
+          starting_balance?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           author_id: string | null
@@ -137,6 +173,7 @@ export type Database = {
       }
       trades: {
         Row: {
+          account_id: string | null
           created_at: string
           date: string
           id: string
@@ -150,6 +187,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_id?: string | null
           created_at?: string
           date?: string
           id?: string
@@ -163,6 +201,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_id?: string | null
           created_at?: string
           date?: string
           id?: string
@@ -175,7 +214,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "trades_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       users: {
         Row: {

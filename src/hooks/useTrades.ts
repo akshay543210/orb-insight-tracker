@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAccounts, Account } from './useAccounts';
 
 export interface Trade {
   id: string;
@@ -11,6 +12,7 @@ export interface Trade {
   result: string;
   notes?: string;
   image_url?: string;
+  account_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -33,6 +35,7 @@ export interface TradeStats {
 
 export function useTrades() {
   const { user } = useAuth();
+  const { accounts, getActiveAccount } = useAccounts();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +70,19 @@ export function useTrades() {
   useEffect(() => {
     fetchTrades();
   }, [user]);
+
+  const calculatePnL = (trade: Trade, account?: Account): number => {
+    if (!account) return 0;
+    
+    const riskAmount = account.starting_balance * (account.risk_per_trade / 100);
+    
+    if (trade.result.toLowerCase() === 'win') {
+      return riskAmount * (trade.rr || 0);
+    } else if (trade.result.toLowerCase() === 'loss') {
+      return -riskAmount;
+    }
+    return 0; // breakeven
+  };
 
   const calculateStats = (): TradeStats => {
     if (trades.length === 0) {
@@ -168,5 +184,6 @@ export function useTrades() {
     calculateStats,
     getTradesByDate,
     getTradesBySession,
+    calculatePnL,
   };
 }
