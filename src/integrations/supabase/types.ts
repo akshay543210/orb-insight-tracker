@@ -258,6 +258,10 @@ export type Database = {
         Args: { account_id_param: string }
         Returns: undefined
       }
+      set_account_active: {
+        Args: { account_id_param: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

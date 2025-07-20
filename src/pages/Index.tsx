@@ -1,6 +1,6 @@
 import { StatsCard } from "@/components/StatsCard"
 import { PerformanceChart } from "@/components/PerformanceChart"
-import { TradingTable } from "@/components/TradingTable"
+import { RecentTradesTable } from "@/components/RecentTradesTable"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts'
 import { TrendingUp, TrendingDown, Target, Calendar, DollarSign } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -38,28 +38,13 @@ const generateEquityCurve = (trades: any[]) => {
 }
 
 const Index = () => {
-  const { trades, calculateStats, calculatePnL, loading } = useTrades()
+  const { trades, calculateStats, calculatePnL, loading, refetchTrades } = useTrades()
   const { getActiveAccount } = useAccounts()
   const stats = calculateStats()
   const activeAccount = getActiveAccount()
 
   // Generate equity curve from trades
   const equityCurveData = generateEquityCurve(trades)
-
-  // Transform trades data to the format expected by TradingTable
-  const transformedTrades = trades.map(trade => ({
-    id: trade.id,
-    date: new Date(trade.date).toLocaleDateString(),
-    session: trade.session,
-    symbol: trade.strategy_tag || 'N/A',
-    side: 'LONG' as const, // We don't have side in our schema, defaulting to LONG
-    entry: 0, // We don't have entry/exit prices, just R/R
-    exit: 0,
-    rr: trade.rr || 0,
-    result: trade.result.toUpperCase() as 'WIN' | 'LOSS',
-    pnl: calculatePnL(trade, activeAccount), // Real P&L calculation based on account
-    notes: trade.notes
-  }))
 
   return (
     <div className="space-y-6">
@@ -170,7 +155,7 @@ const Index = () => {
       </Card>
 
       {/* Trades Table */}
-      <TradingTable trades={transformedTrades} />
+      <RecentTradesTable trades={trades} onTradeUpdate={refetchTrades} />
 
       {/* Demo Notice - only show if no trades */}
       {stats.totalTrades === 0 && (

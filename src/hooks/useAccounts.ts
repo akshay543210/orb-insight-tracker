@@ -53,6 +53,13 @@ export function useAccounts() {
     if (!user) return null;
 
     try {
+      // First set all existing accounts to inactive
+      await supabase
+        .from('accounts')
+        .update({ is_active: false })
+        .eq('user_id', user.id);
+
+      // Then create the new account as active
       const { data, error } = await supabase
         .from('accounts')
         .insert({
@@ -69,6 +76,10 @@ export function useAccounts() {
       if (error) throw error;
 
       await fetchAccounts();
+      
+      // Notify other hooks that active account changed
+      window.dispatchEvent(new CustomEvent('activeAccountChanged'));
+      
       toast({
         title: "Account Created",
         description: `${name} account created with $${startingBalance.toLocaleString()} starting balance.`,
@@ -140,17 +151,12 @@ export function useAccounts() {
 
   const setActiveAccount = async (accountId: string) => {
     try {
-      // Set all accounts to inactive
-      await supabase
-        .from('accounts')
-        .update({ is_active: false })
-        .eq('user_id', user?.id);
+      // Use the safe function to set active account
+      const { error } = await supabase.rpc('set_account_active', {
+        account_id_param: accountId
+      });
 
-      // Set the selected account to active
-      await supabase
-        .from('accounts')
-        .update({ is_active: true })
-        .eq('id', accountId);
+      if (error) throw error;
 
       await fetchAccounts();
       
