@@ -1,84 +1,76 @@
+import { Suspense, useMemo } from "react"
 import { StatsCard } from "@/components/StatsCard"
 import { PerformanceChart } from "@/components/PerformanceChart"
 import { RecentTradesTable } from "@/components/RecentTradesTable"
+import { LoadingSpinner } from "@/components/LoadingSpinner"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts'
 import { TrendingUp, TrendingDown, Target, Calendar, DollarSign } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useTrades } from "@/hooks/useTrades"
 import { useAccounts } from "@/hooks/useAccounts"
-
-// Generate equity curve from real trades data
-const generateEquityCurve = (trades: any[]) => {
-  if (trades.length === 0) {
-    return [{ date: 'Start', value: 0 }]
-  }
-
-  // Sort trades by date
-  const sortedTrades = [...trades].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-  
-  let runningTotal = 0
-  const equityData = [{ date: 'Start', value: 0 }]
-  
-  sortedTrades.forEach(trade => {
-    const rr = trade.rr || 0
-    if (trade.result.toLowerCase() === 'win') {
-      runningTotal += rr
-    } else if (trade.result.toLowerCase() === 'loss') {
-      runningTotal -= rr
-    }
-    // breakeven doesn't change the total
-    
-    equityData.push({
-      date: new Date(trade.date).toLocaleDateString(),
-      value: runningTotal
-    })
-  })
-  
-  return equityData
-}
+import { generateEquityCurve } from "@/lib/tradingUtils"
+import { motion } from "framer-motion"
 
 const Index = () => {
   const { trades, calculateStats, calculatePnL, loading, refetchTrades } = useTrades()
   const { getActiveAccount } = useAccounts()
-  const stats = calculateStats()
+  const stats = calculateStats // This is now a memoized value, not a function
   const activeAccount = getActiveAccount()
 
-  // Generate equity curve from trades
-  const equityCurveData = generateEquityCurve(trades)
+  // Memoize equity curve generation for performance
+  const equityCurveData = useMemo(() => generateEquityCurve(trades), [trades])
+
+  if (loading) {
+    return <LoadingSpinner fullScreen text="Loading dashboard..." />
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Trading Dashboard</h1>
-          <p className="text-muted-foreground">Track your ORB trading performance</p>
-        </div>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-success">
-            {activeAccount ? `$${activeAccount.current_balance.toLocaleString()}` : '$0'}
+    <ErrorBoundary>
+      <motion.div 
+        className="space-y-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        {/* Header */}
+        <motion.div 
+          className="flex items-center justify-between"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Trading Dashboard</h1>
+            <p className="text-muted-foreground">Track your ORB trading performance</p>
           </div>
-          <div className="text-sm text-muted-foreground">
-            {activeAccount ? activeAccount.name : 'No Active Account'}
-          </div>
-          {activeAccount && (
-            <div className={`text-sm font-medium ${
-              activeAccount.current_balance >= activeAccount.starting_balance 
-                ? 'text-success' 
-                : 'text-destructive'
-            }`}>
-              P&L: {activeAccount.current_balance >= activeAccount.starting_balance ? '+' : ''}
-              ${(activeAccount.current_balance - activeAccount.starting_balance).toLocaleString()}
+          <div className="text-right">
+            <div className="text-2xl font-bold text-success">
+              {activeAccount ? `$${activeAccount.current_balance.toLocaleString()}` : '$0'}
             </div>
-          )}
-        </div>
-      </div>
+            <div className="text-sm text-muted-foreground">
+              {activeAccount ? activeAccount.name : 'No Active Account'}
+            </div>
+            {activeAccount && (
+              <div className={`text-sm font-medium ${
+                activeAccount.current_balance >= activeAccount.starting_balance 
+                  ? 'text-success' 
+                  : 'text-destructive'
+              }`}>
+                P&L: {activeAccount.current_balance >= activeAccount.starting_balance ? '+' : ''}
+                ${(activeAccount.current_balance - activeAccount.starting_balance).toLocaleString()}
+              </div>
+            )}
+          </div>
+        </motion.div>
 
-      {/* Quick Stats */}
-      {loading ? (
-        <div className="text-center py-8 text-muted-foreground">Loading trades...</div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+        {/* Quick Stats */}
+        <motion.div 
+          className="grid grid-cols-2 md:grid-cols-6 gap-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, staggerChildren: 0.1 }}
+        >
           <StatsCard
             title="WINS"
             value={stats.wins.toString()}
@@ -117,58 +109,88 @@ const Index = () => {
             positive={stats.totalRR >= 0}
             icon={<TrendingUp className="w-5 h-5" />}
           />
-        </div>
-      )}
+        </motion.div>
 
-      {/* Equity Curve */}
-      <Card className="bg-gradient-card shadow-card border-border">
-        <CardHeader>
-          <CardTitle className="text-card-foreground">Portfolio Performance</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={equityCurveData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                <XAxis 
-                  dataKey="date" 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                />
-                <YAxis 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  domain={stats.totalTrades > 0 ? ['dataMin - 1', 'dataMax + 1'] : [0, 1]}
-                  label={{ value: 'R/R', angle: -90, position: 'insideLeft' }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={2}
-                  dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Equity Curve */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="bg-gradient-card shadow-card border-border">
+            <CardHeader>
+              <CardTitle className="text-card-foreground">Portfolio Performance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ErrorBoundary fallback={
+                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                  Chart unavailable
+                </div>
+              }>
+                <Suspense fallback={<LoadingSpinner text="Loading chart..." />}>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={equityCurveData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                        <XAxis 
+                          dataKey="date" 
+                          stroke="hsl(var(--muted-foreground))"
+                          fontSize={12}
+                        />
+                        <YAxis 
+                          stroke="hsl(var(--muted-foreground))"
+                          fontSize={12}
+                          domain={stats.totalTrades > 0 ? ['dataMin - 1', 'dataMax + 1'] : [0, 1]}
+                          label={{ value: 'R/R', angle: -90, position: 'insideLeft' }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="value" 
+                          stroke="hsl(var(--primary))" 
+                          strokeWidth={2}
+                          dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </Suspense>
+              </ErrorBoundary>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-      {/* Trades Table */}
-      <RecentTradesTable trades={trades} onTradeUpdate={refetchTrades} />
+        {/* Trades Table */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner text="Loading trades..." />}>
+              <RecentTradesTable trades={trades} onTradeUpdate={refetchTrades} />
+            </Suspense>
+          </ErrorBoundary>
+        </motion.div>
 
-      {/* Demo Notice - only show if no trades */}
-      {stats.totalTrades === 0 && (
-        <Card className="bg-destructive/10 border-destructive/20">
-          <CardContent className="p-4">
-            <p className="text-destructive text-sm text-center">
-              NO TRADES LOGGED YET. START BY ADDING TRADES IN THE TRADING SESSIONS 
-              (ASIA, LONDON, NY OPEN, NY CLOSE) TO SEE YOUR STATISTICS HERE.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+        {/* Demo Notice - only show if no trades */}
+        {stats.totalTrades === 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Card className="bg-destructive/10 border-destructive/20">
+              <CardContent className="p-4">
+                <p className="text-destructive text-sm text-center">
+                  NO TRADES LOGGED YET. START BY ADDING TRADES IN THE TRADING SESSIONS 
+                  (ASIA, LONDON, NY OPEN, NY CLOSE) TO SEE YOUR STATISTICS HERE.
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </motion.div>
+    </ErrorBoundary>
   );
 };
 

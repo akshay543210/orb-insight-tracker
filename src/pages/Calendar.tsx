@@ -166,7 +166,7 @@ const Calendar = () => {
                 <>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-success">
-                      {calculateStats().totalRR > 0 ? '+' : ''}{calculateStats().totalRR.toFixed(1)}R
+                      {calculateStats.totalRR > 0 ? '+' : ''}{calculateStats.totalRR.toFixed(1)}R
                     </div>
                     <div className="text-sm text-muted-foreground">Total R/R</div>
                   </div>
@@ -174,19 +174,19 @@ const Calendar = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Trades</span>
-                      <span className="text-card-foreground">{calculateStats().totalTrades}</span>
+                      <span className="text-card-foreground">{calculateStats.totalTrades}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Win Rate</span>
-                      <span className="text-card-foreground">{calculateStats().winRate.toFixed(0)}%</span>
+                      <span className="text-card-foreground">{calculateStats.winRate.toFixed(0)}%</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Best Win</span>
-                      <span className="text-success">+{calculateStats().topWinRR.toFixed(1)}R</span>
+                      <span className="text-success">+{calculateStats.topWinRR.toFixed(1)}R</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Worst Loss</span>
-                      <span className="text-destructive">-{calculateStats().topLossRR.toFixed(1)}R</span>
+                      <span className="text-destructive">-{calculateStats.topLossRR.toFixed(1)}R</span>
                     </div>
                   </div>
                 </>

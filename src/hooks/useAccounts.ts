@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -22,7 +22,7 @@ export function useAccounts() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAccounts = async () => {
+  const fetchAccounts = useCallback(async () => {
     if (!user) {
       setAccounts([]);
       setLoading(false);
@@ -47,7 +47,7 @@ export function useAccounts() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   const createAccount = async (name: string, startingBalance: number, riskPerTrade: number = 2.0) => {
     if (!user) return null;

@@ -6,7 +6,7 @@ import { useTrades } from "@/hooks/useTrades"
 
 const Stats = () => {
   const { trades, calculateStats, loading } = useTrades()
-  const stats = calculateStats()
+  const stats = calculateStats // This is now a memoized value, not a function
 
   // Calculate performance by day of week
   const dayPerformanceData = [

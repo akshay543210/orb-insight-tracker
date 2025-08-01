@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccounts, Account } from './useAccounts';
@@ -43,12 +43,14 @@ export function useTrades() {
 
   const activeAccount = getActiveAccount();
   
-  // Filter trades for active account only
-  const trades = activeAccount 
-    ? allTrades.filter(trade => trade.account_id === activeAccount.id)
-    : [];
+  // Memoize filtered trades for active account only
+  const trades = useMemo(() => {
+    return activeAccount 
+      ? allTrades.filter(trade => trade.account_id === activeAccount.id)
+      : [];
+  }, [allTrades, activeAccount?.id]);
 
-  const fetchTrades = async () => {
+  const fetchTrades = useCallback(async () => {
     if (!user) {
       setAllTrades([]);
       setLoading(false);
@@ -73,7 +75,7 @@ export function useTrades() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   useEffect(() => {
     fetchTrades();
@@ -111,7 +113,7 @@ export function useTrades() {
     }
   }, [activeAccount?.id]);
 
-  const calculatePnL = (trade: Trade, account?: Account): number => {
+  const calculatePnL = useCallback((trade: Trade, account?: Account): number => {
     if (!account) return 0;
     
     const riskAmount = account.starting_balance * (account.risk_per_trade / 100);
@@ -122,9 +124,9 @@ export function useTrades() {
       return -riskAmount;
     }
     return 0; // breakeven
-  };
+  }, []);
 
-  const calculateStats = (): TradeStats => {
+  const calculateStats = useMemo((): TradeStats => {
     if (trades.length === 0) {
       return {
         totalTrades: 0,
@@ -196,9 +198,9 @@ export function useTrades() {
       topLossRR,
       totalRR,
     };
-  };
+  }, [trades]);
 
-  const getTradesByDate = () => {
+  const getTradesByDate = useCallback(() => {
     const tradesByDate: Record<string, Trade[]> = {};
     
     trades.forEach(trade => {
@@ -210,11 +212,11 @@ export function useTrades() {
     });
 
     return tradesByDate;
-  };
+  }, [trades]);
 
-  const getTradesBySession = (session: string) => {
+  const getTradesBySession = useCallback((session: string) => {
     return trades.filter(trade => trade.session.toLowerCase() === session.toLowerCase());
-  };
+  }, [trades]);
 
   return {
     trades,
