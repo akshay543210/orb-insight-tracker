@@ -194,6 +194,9 @@ export function RecentTradesTable({ trades, onTradeUpdate }: RecentTradesTablePr
       // Reset copied state after 2 seconds
       setTimeout(() => setCopiedTradeId(null), 2000);
       
+      // Refresh trades to reflect the updated is_public status
+      onTradeUpdate();
+      
     } catch (err) {
       console.error('Error sharing trade:', err);
       toast({

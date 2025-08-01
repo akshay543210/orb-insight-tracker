@@ -13,6 +13,7 @@ export interface Trade {
   notes?: string;
   image_url?: string;
   account_id?: string;
+  is_public?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -78,19 +79,32 @@ export function useTrades() {
     fetchTrades();
   }, [user]);
 
-  // Refetch trades when active account changes
+  // Real-time subscription for trades
   useEffect(() => {
-    const handleActiveAccountChange = () => {
-      fetchTrades();
-    };
-    
-    window.addEventListener('activeAccountChanged', handleActiveAccountChange);
-    
+    if (!user) return;
+
+    const channel = supabase
+      .channel('trades-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'trades',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          fetchTrades();
+        }
+      )
+      .subscribe();
+
     return () => {
-      window.removeEventListener('activeAccountChanged', handleActiveAccountChange);
+      supabase.removeChannel(channel);
     };
-  }, []);
-  
+  }, [user]);
+
+  // Refetch trades when active account changes
   useEffect(() => {
     if (activeAccount) {
       fetchTrades();
