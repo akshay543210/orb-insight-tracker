@@ -18,6 +18,10 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				'cyber': ['Orbitron', 'sans-serif'],
+				'tech': ['Rajdhani', 'sans-serif']
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -78,11 +82,17 @@ export default {
 				'gradient-primary': 'var(--gradient-primary)',
 				'gradient-card': 'var(--gradient-card)',
 				'gradient-profit': 'var(--gradient-profit)',
-				'gradient-loss': 'var(--gradient-loss)'
+				'gradient-loss': 'var(--gradient-loss)',
+				'gradient-neon': 'var(--gradient-neon)',
+				'gradient-cyberpunk': 'var(--gradient-cyberpunk)'
 			},
 			boxShadow: {
 				'card': 'var(--shadow-card)',
-				'primary': 'var(--shadow-primary)'
+				'primary': 'var(--shadow-primary)',
+				'success': 'var(--shadow-success)',
+				'destructive': 'var(--shadow-destructive)',
+				'accent': 'var(--shadow-accent)',
+				'purple': 'var(--shadow-purple)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -105,11 +115,41 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'neon-breathe': {
+					'0%, 100%': { 
+						boxShadow: '0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor'
+					},
+					'50%': { 
+						boxShadow: '0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor'
+					}
+				},
+				'neon-pulse': {
+					'0%, 100%': { 
+						opacity: '1',
+						transform: 'scale(1)'
+					},
+					'50%': { 
+						opacity: '0.8',
+						transform: 'scale(1.05)'
+					}
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0px)' },
+					'50%': { transform: 'translateY(-10px)' }
+				},
+				'glow-rotate': {
+					'0%': { filter: 'hue-rotate(0deg)' },
+					'100%': { filter: 'hue-rotate(360deg)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'neon-breathe': 'neon-breathe 2s ease-in-out infinite alternate',
+				'neon-pulse': 'neon-pulse 1.5s ease-in-out infinite',
+				'float': 'float 3s ease-in-out infinite',
+				'glow-rotate': 'glow-rotate 3s linear infinite'
 			}
 		}
 	},

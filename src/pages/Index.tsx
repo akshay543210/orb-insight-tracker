@@ -4,8 +4,9 @@ import { PerformanceChart } from "@/components/PerformanceChart"
 import { RecentTradesTable } from "@/components/RecentTradesTable"
 import { LoadingSpinner } from "@/components/LoadingSpinner"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
+import { FloatingParticles } from "@/components/FloatingParticles"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts'
-import { TrendingUp, TrendingDown, Target, Calendar, DollarSign } from "lucide-react"
+import { TrendingUp, TrendingDown, Target, Calendar, DollarSign, Zap } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useTrades } from "@/hooks/useTrades"
 import { useAccounts } from "@/hooks/useAccounts"
@@ -27,41 +28,55 @@ const Index = () => {
 
   return (
     <ErrorBoundary>
+      <FloatingParticles />
       <motion.div 
-        className="space-y-6"
+        className="space-y-6 relative z-10"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        {/* Header */}
+        {/* Cyberpunk Header */}
         <motion.div 
-          className="flex items-center justify-between"
+          className="flex items-center justify-between mb-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1 }}
         >
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Trading Dashboard</h1>
-            <p className="text-muted-foreground">Track your ORB trading performance</p>
+            <motion.h1 
+              className="text-4xl font-bold font-cyber text-glow-primary mb-2"
+              animate={{ textShadow: ["var(--text-glow-primary)", "var(--text-glow-accent)", "var(--text-glow-primary)"] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              PropFirm Knowledge Journal
+            </motion.h1>
+            <p className="text-muted-foreground font-tech text-lg">Cyberpunk Trading Dashboard</p>
+            <div className="flex items-center gap-2 mt-2">
+              <Zap className="w-4 h-4 text-primary animate-neon-pulse" />
+              <span className="text-sm text-primary font-tech">Neural Network Powered Analytics</span>
+            </div>
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-success">
+          <motion.div 
+            className="text-right bg-gradient-card p-4 rounded-lg border border-primary/30 shadow-primary/20"
+            whileHover={{ scale: 1.05, boxShadow: "var(--shadow-primary)" }}
+          >
+            <div className="text-3xl font-bold font-cyber text-glow-accent">
               {activeAccount ? `$${activeAccount.current_balance.toLocaleString()}` : '$0'}
             </div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-muted-foreground font-tech">
               {activeAccount ? activeAccount.name : 'No Active Account'}
             </div>
             {activeAccount && (
-              <div className={`text-sm font-medium ${
+              <div className={`text-sm font-medium font-tech ${
                 activeAccount.current_balance >= activeAccount.starting_balance 
-                  ? 'text-success' 
-                  : 'text-destructive'
+                  ? 'text-success text-glow-accent' 
+                  : 'text-destructive text-glow-pink'
               }`}>
                 P&L: {activeAccount.current_balance >= activeAccount.starting_balance ? '+' : ''}
                 ${(activeAccount.current_balance - activeAccount.starting_balance).toLocaleString()}
               </div>
             )}
-          </div>
+          </motion.div>
         </motion.div>
 
         {/* Quick Stats */}
@@ -111,35 +126,45 @@ const Index = () => {
           />
         </motion.div>
 
-        {/* Equity Curve */}
+        {/* Cyberpunk Equity Curve */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
+          whileHover={{ scale: 1.02 }}
         >
-          <Card className="bg-gradient-card shadow-card border-border">
+          <Card className="bg-gradient-card shadow-primary/20 border-primary/30 hover:shadow-primary/40 transition-all duration-500">
             <CardHeader>
-              <CardTitle className="text-card-foreground">Portfolio Performance</CardTitle>
+              <CardTitle className="text-card-foreground font-cyber text-glow-primary">
+                🚀 Neural Portfolio Analysis
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ErrorBoundary fallback={
                 <div className="h-64 flex items-center justify-center text-muted-foreground">
+                  <Zap className="w-8 h-8 text-destructive animate-neon-pulse mr-2" />
                   Chart unavailable
                 </div>
               }>
-                <Suspense fallback={<LoadingSpinner text="Loading chart..." />}>
-                  <div className="h-64">
+                <Suspense fallback={<LoadingSpinner text="Loading neural chart..." />}>
+                  <div className="h-64 relative">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={equityCurveData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                        <CartesianGrid 
+                          strokeDasharray="3 3" 
+                          stroke="hsl(var(--primary))" 
+                          opacity={0.2} 
+                        />
                         <XAxis 
                           dataKey="date" 
-                          stroke="hsl(var(--muted-foreground))"
+                          stroke="hsl(var(--primary))"
                           fontSize={12}
+                          fontFamily="Rajdhani"
                         />
                         <YAxis 
-                          stroke="hsl(var(--muted-foreground))"
+                          stroke="hsl(var(--primary))"
                           fontSize={12}
+                          fontFamily="Rajdhani"
                           domain={stats.totalTrades > 0 ? ['dataMin - 1', 'dataMax + 1'] : [0, 1]}
                           label={{ value: 'R/R', angle: -90, position: 'insideLeft' }}
                         />
@@ -147,8 +172,14 @@ const Index = () => {
                           type="monotone" 
                           dataKey="value" 
                           stroke="hsl(var(--primary))" 
-                          strokeWidth={2}
-                          dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
+                          strokeWidth={3}
+                          dot={{ 
+                            fill: "hsl(var(--primary))", 
+                            strokeWidth: 2, 
+                            r: 5,
+                            filter: "drop-shadow(0 0 4px hsl(var(--primary)))"
+                          }}
+                          filter="drop-shadow(0 0 8px hsl(var(--primary)))"
                         />
                       </LineChart>
                     </ResponsiveContainer>
