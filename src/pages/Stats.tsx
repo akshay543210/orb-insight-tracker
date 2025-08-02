@@ -1,5 +1,6 @@
 import { StatsCard } from "@/components/StatsCard"
 import { PerformanceChart } from "@/components/PerformanceChart"
+import { SmartSuggestions } from "@/components/SmartSuggestions"
 import { TrendingUp, TrendingDown, Target, Calendar } from "lucide-react"
 import { useTrades } from "@/hooks/useTrades"
 
@@ -119,6 +120,9 @@ const Stats = () => {
           value={stats.breakevens.toString()}
         />
       </div>
+
+      {/* Smart Suggestions */}
+      <SmartSuggestions trades={trades} stats={stats} />
 
       {/* Performance Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
