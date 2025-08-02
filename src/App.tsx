@@ -19,6 +19,7 @@ import Help from "./pages/Help";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import PublicTrade from "./pages/PublicTrade";
+import TradeReview from "./pages/TradeReview";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
                           <Route path="/" element={<Index />} />
                           <Route path="/stats" element={<Stats />} />
                           <Route path="/calendar" element={<Calendar />} />
+                          <Route path="/review/:tradeId" element={<TradeReview />} />
                           <Route path="/sessions/asia" element={<AsiaSession />} />
                           <Route path="/sessions/london" element={<LondonSession />} />
                           <Route path="/sessions/ny-open" element={<NYOpenSession />} />

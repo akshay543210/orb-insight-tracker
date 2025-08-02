@@ -17,7 +17,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { Pencil, Trash2, Plus, Share2, Check } from "lucide-react";
+import { Pencil, Trash2, Plus, Share2, Check, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -34,6 +35,7 @@ export function RecentTradesTable({ trades, onTradeUpdate }: RecentTradesTablePr
   const { user } = useAuth();
   const { getActiveAccount } = useAccounts();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const activeAccount = getActiveAccount();
   
   const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
@@ -396,6 +398,15 @@ export function RecentTradesTable({ trades, onTradeUpdate }: RecentTradesTablePr
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/review/${trade.id}`)}
+                        className="h-8 w-8 p-0"
+                        title="Review trade details"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
