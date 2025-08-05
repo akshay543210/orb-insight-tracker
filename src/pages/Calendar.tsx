@@ -1,16 +1,25 @@
 import { useState } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, BarChart3, Users, TrendingUp, Settings, HelpCircle, Calendar as CalendarIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { useTrades } from "@/hooks/useTrades"
+import { useAccounts } from "@/hooks/useAccounts"
+import { calculatePnL } from "@/lib/tradingUtils"
+import { format, startOfWeek, endOfWeek, addWeeks, isSameWeek, startOfMonth, endOfMonth } from "date-fns"
 
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date())
-  const { trades, calculateStats, loading } = useTrades()
+  const { trades, loading } = useTrades()
+  const { getActiveAccount } = useAccounts()
+  const activeAccount = getActiveAccount()
 
-  const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
-  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay()
+  const today = new Date()
+  const currentYear = currentDate.getFullYear()
+  const currentMonth = currentDate.getMonth()
+  
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay()
   
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
@@ -19,28 +28,68 @@ const Calendar = () => {
   
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
-  // Get trades for the current month
+  // Navigation items for sidebar
+  const navItems = [
+    { icon: BarChart3, label: "Dashboard", active: false },
+    { icon: Users, label: "Groups", active: false },
+    { icon: TrendingUp, label: "Stats", active: false },
+    { icon: CalendarIcon, label: "Calendar", active: true },
+    { icon: Settings, label: "Settings", active: false },
+  ]
+
+  // Get trades for a specific day
   const getTradesForDay = (day: number) => {
-    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
-    const dateStr = date.toDateString()
+    const date = new Date(currentYear, currentMonth, day)
+    const dateStr = format(date, 'yyyy-MM-dd')
     
     return trades.filter(trade => {
-      const tradeDate = new Date(trade.date)
-      return tradeDate.toDateString() === dateStr
+      const tradeDate = format(new Date(trade.date), 'yyyy-MM-dd')
+      return tradeDate === dateStr
     })
   }
 
-  const getDayResult = (dayTrades: any[]) => {
-    if (dayTrades.length === 0) return null
+  // Calculate P&L for a day
+  const getDayPnL = (day: number) => {
+    const dayTrades = getTradesForDay(day)
+    if (!activeAccount || dayTrades.length === 0) return 0
     
-    const wins = dayTrades.filter(t => t.result.toLowerCase() === 'win').length
-    const losses = dayTrades.filter(t => t.result.toLowerCase() === 'loss').length
-    const breakevens = dayTrades.filter(t => t.result.toLowerCase() === 'breakeven').length
+    return dayTrades.reduce((total, trade) => {
+      return total + calculatePnL(trade, activeAccount)
+    }, 0)
+  }
+
+  // Get weekly data
+  const getWeekData = (weekStart: Date) => {
+    const weekEnd = endOfWeek(weekStart)
+    const weekTrades = trades.filter(trade => {
+      const tradeDate = new Date(trade.date)
+      return tradeDate >= weekStart && tradeDate <= weekEnd
+    })
     
-    if (wins > losses && wins > breakevens) return "win"
-    if (losses > wins && losses > breakevens) return "loss"
-    if (breakevens > 0) return "breakeven"
-    return wins > losses ? "win" : "loss"
+    const weekPnL = activeAccount ? weekTrades.reduce((total, trade) => {
+      return total + calculatePnL(trade, activeAccount)
+    }, 0) : 0
+    
+    return {
+      trades: weekTrades.length,
+      pnl: weekPnL
+    }
+  }
+
+  // Generate calendar weeks for the current month
+  const getCalendarWeeks = () => {
+    const weeks = []
+    const monthStart = new Date(currentYear, currentMonth, 1)
+    const monthEnd = new Date(currentYear, currentMonth + 1, 0)
+    
+    let currentWeekStart = startOfWeek(monthStart)
+    
+    while (currentWeekStart <= monthEnd) {
+      weeks.push(currentWeekStart)
+      currentWeekStart = addWeeks(currentWeekStart, 1)
+    }
+    
+    return weeks
   }
 
   const navigateMonth = (direction: "prev" | "next") => {
@@ -55,144 +104,203 @@ const Calendar = () => {
     })
   }
 
-  const getDayColor = (day: number) => {
-    const dayTrades = getTradesForDay(day)
-    const tradeResult = getDayResult(dayTrades)
+  const isToday = (day: number) => {
+    return today.getDate() === day && 
+           today.getMonth() === currentMonth && 
+           today.getFullYear() === currentYear
+  }
+
+  // Calculate total monthly stats
+  const monthlyStats = () => {
+    const monthStart = startOfMonth(currentDate)
+    const monthEnd = endOfMonth(currentDate)
     
-    if (!tradeResult) return "bg-card hover:bg-muted/50"
+    const monthTrades = trades.filter(trade => {
+      const tradeDate = new Date(trade.date)
+      return tradeDate >= monthStart && tradeDate <= monthEnd
+    })
     
-    switch (tradeResult) {
-      case "win":
-        return "bg-success/20 hover:bg-success/30 border-success"
-      case "loss":
-        return "bg-destructive/20 hover:bg-destructive/30 border-destructive"
-      case "breakeven":
-        return "bg-warning/20 hover:bg-warning/30 border-warning"
-      default:
-        return "bg-card hover:bg-muted/50"
+    const totalPnL = activeAccount ? monthTrades.reduce((total, trade) => {
+      return total + calculatePnL(trade, activeAccount)
+    }, 0) : 0
+    
+    return {
+      balance: (activeAccount?.current_balance || 50000) + totalPnL,
+      mll: 0, // Max Loss Limit
+      rpnl: totalPnL > 0 ? totalPnL : 0, // Realized P&L (profits only)
+      upnl: 0 // Unrealized P&L
     }
   }
 
+  const stats = monthlyStats()
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-foreground">Trading Calendar</h1>
-        <div className="text-sm text-muted-foreground">
-          <span className="inline-block w-3 h-3 bg-success rounded mr-2"></span>Win
-          <span className="inline-block w-3 h-3 bg-destructive rounded mr-2 ml-4"></span>Loss
-          <span className="inline-block w-3 h-3 bg-warning rounded mr-2 ml-4"></span>Breakeven
+    <div className="min-h-screen bg-background flex">
+      {/* Left Sidebar */}
+      <div className="w-16 bg-card border-r border-border flex flex-col items-center py-6 space-y-6">
+        {navItems.map((item, index) => (
+          <div
+            key={index}
+            className={cn(
+              "p-3 rounded-lg cursor-pointer transition-all duration-200",
+              item.active 
+                ? "bg-primary text-primary-foreground shadow-primary" 
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            )}
+          >
+            <item.icon className="w-5 h-5" />
+          </div>
+        ))}
+        
+        <div className="flex-1" />
+        
+        {/* Help at bottom */}
+        <div className="p-3 rounded-lg cursor-pointer transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-muted">
+          <HelpCircle className="w-5 h-5" />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Calendar */}
-        <div className="lg:col-span-3">
-          <Card className="bg-gradient-card shadow-card border-border">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-xl text-card-foreground">
-                  {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-                </CardTitle>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => navigateMonth("prev")}
-                    className="border-border hover:bg-muted"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => navigateMonth("next")}
-                    className="border-border hover:bg-muted"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Top Stats Bar */}
+        <div className="h-16 bg-card border-b border-border flex items-center px-8 space-x-8">
+          <div className="bg-muted/30 px-4 py-2 rounded-lg">
+            <div className="text-xs text-muted-foreground uppercase tracking-wide">BALANCE</div>
+            <div className="text-sm font-semibold text-foreground">
+              ${stats.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+          </div>
+          <div className="bg-muted/30 px-4 py-2 rounded-lg">
+            <div className="text-xs text-muted-foreground uppercase tracking-wide">MLL</div>
+            <div className="text-sm font-semibold text-foreground">
+              ${stats.mll.toFixed(2)}
+            </div>
+          </div>
+          <div className="bg-muted/30 px-4 py-2 rounded-lg">
+            <div className="text-xs text-muted-foreground uppercase tracking-wide">RP&L</div>
+            <div className="text-sm font-semibold text-foreground">
+              ${stats.rpnl.toFixed(2)}
+            </div>
+          </div>
+          <div className="bg-muted/30 px-4 py-2 rounded-lg">
+            <div className="text-xs text-muted-foreground uppercase tracking-wide">UP&L</div>
+            <div className="text-sm font-semibold text-foreground">
+              ${stats.upnl.toFixed(2)}
+            </div>
+          </div>
+        </div>
+
+        {/* Calendar Section */}
+        <div className="flex-1 p-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Calendar Header */}
+            <div className="flex items-center justify-between mb-8">
+              <h1 className="text-2xl font-bold text-foreground">
+                {monthNames[currentMonth]} {currentYear}
+              </h1>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => navigateMonth("prev")}
+                  className="border-border hover:bg-muted"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => navigateMonth("next")}
+                  className="border-border hover:bg-muted"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-7 gap-2">
-                {/* Day headers */}
+            </div>
+
+            {/* Calendar Grid with Week Summaries */}
+            <div className="space-y-2">
+              {/* Day Headers */}
+              <div className="grid grid-cols-8 gap-2 mb-4">
                 {dayNames.map(day => (
-                  <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
+                  <div key={day} className="p-3 text-center text-sm font-medium text-muted-foreground">
                     {day}
                   </div>
                 ))}
-                
-                {/* Empty cells for days before month starts */}
-                {Array.from({ length: firstDayOfMonth }, (_, i) => (
-                  <div key={`empty-${i}`} className="p-2 h-16"></div>
-                ))}
-                
-                {/* Calendar days */}
-                {Array.from({ length: daysInMonth }, (_, i) => {
-                  const day = i + 1
-                  const dayTrades = getTradesForDay(day)
-                  return (
-                    <div
-                      key={day}
-                      className={cn(
-                        "p-2 h-16 border rounded-md cursor-pointer transition-colors",
-                        "flex flex-col items-center justify-center text-sm font-medium",
-                        getDayColor(day)
-                      )}
-                      title={dayTrades.length > 0 ? `${dayTrades.length} trade(s)` : ''}
-                    >
-                      <span>{day}</span>
-                      {dayTrades.length > 0 && (
-                        <span className="text-xs opacity-70">{dayTrades.length}</span>
-                      )}
-                    </div>
-                  )
-                })}
+                <div className="p-3 text-center text-sm font-medium text-muted-foreground">
+                  Week
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* Weekly Summary */}
-        <div className="space-y-4">
-          <Card className="bg-gradient-card shadow-card border-border">
-            <CardHeader>
-              <CardTitle className="text-lg text-card-foreground">Weekly Summary</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {loading ? (
-                <div className="text-center text-muted-foreground">Loading...</div>
-              ) : (
-                <>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-success">
-                      {calculateStats.totalRR > 0 ? '+' : ''}{calculateStats.totalRR.toFixed(1)}R
+              {/* Calendar Weeks */}
+              {getCalendarWeeks().map((weekStart, weekIndex) => {
+                const weekData = getWeekData(weekStart)
+                
+                return (
+                  <div key={weekIndex} className="grid grid-cols-8 gap-2">
+                    {/* Days of the week */}
+                    {Array.from({ length: 7 }, (_, dayIndex) => {
+                      const date = new Date(weekStart)
+                      date.setDate(weekStart.getDate() + dayIndex)
+                      const day = date.getDate()
+                      const isCurrentMonth = date.getMonth() === currentMonth
+                      const dayTrades = isCurrentMonth ? getTradesForDay(day) : []
+                      const dayPnL = isCurrentMonth ? getDayPnL(day) : 0
+                      const isCurrentDay = isCurrentMonth && isToday(day)
+                      
+                      return (
+                        <div
+                          key={dayIndex}
+                          className={cn(
+                            "bg-card border border-border rounded-lg p-3 h-24 flex flex-col justify-between transition-all duration-200",
+                            isCurrentMonth ? "hover:bg-muted/50" : "opacity-30",
+                            isCurrentDay && "ring-2 ring-primary shadow-primary"
+                          )}
+                        >
+                          {isCurrentMonth && (
+                            <>
+                              <div className="text-xs text-muted-foreground">{day}</div>
+                              <div className="flex-1 flex flex-col justify-center items-center">
+                                {dayPnL !== 0 && (
+                                  <div className={cn(
+                                    "text-sm font-bold",
+                                    dayPnL > 0 ? "text-success" : "text-destructive"
+                                  )}>
+                                    {dayPnL > 0 ? '+' : ''}${dayPnL.toFixed(2)}
+                                  </div>
+                                )}
+                                {dayTrades.length > 0 && (
+                                  <div className="text-xs text-muted-foreground">
+                                    {dayTrades.length} trade{dayTrades.length > 1 ? 's' : ''}
+                                  </div>
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )
+                    })}
+
+                    {/* Week Summary */}
+                    <div className="bg-muted/20 border border-border rounded-lg p-3 h-24 flex flex-col justify-center items-center">
+                      <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+                        Week {weekIndex + 1}
+                      </div>
+                      <div className={cn(
+                        "text-sm font-bold",
+                        weekData.pnl > 0 ? "text-success" : weekData.pnl < 0 ? "text-destructive" : "text-muted-foreground"
+                      )}>
+                        {weekData.pnl > 0 ? '+' : ''}${weekData.pnl.toFixed(2)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {weekData.trades} trade{weekData.trades !== 1 ? 's' : ''}
+                      </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">Total R/R</div>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Trades</span>
-                      <span className="text-card-foreground">{calculateStats.totalTrades}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Win Rate</span>
-                      <span className="text-card-foreground">{calculateStats.winRate.toFixed(0)}%</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Best Win</span>
-                      <span className="text-success">+{calculateStats.topWinRR.toFixed(1)}R</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Worst Loss</span>
-                      <span className="text-destructive">-{calculateStats.topLossRR.toFixed(1)}R</span>
-                    </div>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
+                )
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </div>
