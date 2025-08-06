@@ -115,16 +115,10 @@ export function AppSidebar() {
                 <NewTradeModal onTradeAdded={() => window.location.reload()} />
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton className="bg-muted text-muted-foreground hover:bg-muted/80">
-                  <PenTool className="w-4 h-4" />
-                  {!collapsed && <span>New Setup</span>}
-                </SidebarMenuButton>
+                
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton className="bg-amber-500/20 text-amber-500 hover:bg-amber-500/30">
-                  <Bookmark className="w-4 h-4" />
-                  {!collapsed && <span>New Note</span>}
-                </SidebarMenuButton>
+                
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
