@@ -10,10 +10,6 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Stats from "./pages/Stats";
 import Calendar from "./pages/Calendar";
-import AsiaSession from "./pages/sessions/AsiaSession";
-import LondonSession from "./pages/sessions/LondonSession";
-import NYOpenSession from "./pages/sessions/NYOpenSession";
-import NYCloseSession from "./pages/sessions/NYCloseSession";
 import Settings from "./pages/Settings";
 import Help from "./pages/Help";
 import Auth from "./pages/Auth";
@@ -42,7 +38,7 @@ const App = () => (
                       <header className="h-12 flex items-center border-b border-border bg-card">
                         <SidebarTrigger className="ml-4" />
                         <div className="ml-4">
-                          <h1 className="text-lg font-semibold text-card-foreground">ORB Trading Journal</h1>
+                          <h1 className="text-lg font-semibold text-card-foreground">PropFirm Knowledge Journal</h1>
                         </div>
                       </header>
                       <main className="flex-1 p-6">
@@ -51,10 +47,6 @@ const App = () => (
                           <Route path="/stats" element={<Stats />} />
                           <Route path="/calendar" element={<Calendar />} />
                           <Route path="/review/:tradeId" element={<TradeReview />} />
-                          <Route path="/sessions/asia" element={<AsiaSession />} />
-                          <Route path="/sessions/london" element={<LondonSession />} />
-                          <Route path="/sessions/ny-open" element={<NYOpenSession />} />
-                          <Route path="/sessions/ny-close" element={<NYCloseSession />} />
                           <Route path="/settings" element={<Settings />} />
                           <Route path="/help" element={<Help />} />
                           <Route path="*" element={<NotFound />} />

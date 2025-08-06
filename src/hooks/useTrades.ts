@@ -7,6 +7,12 @@ export interface Trade {
   id: string;
   date: string;
   session: string;
+  symbol?: string;
+  side?: string;
+  entry_price?: number;
+  exit_price?: number;
+  quantity?: number;
+  setup_tag?: string;
   strategy_tag?: string;
   rr?: number;
   result: string;
@@ -14,6 +20,8 @@ export interface Trade {
   image_url?: string;
   account_id?: string;
   is_public?: boolean;
+  pnl_dollar?: number;
+  commission?: number;
   created_at: string;
   updated_at: string;
 }

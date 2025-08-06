@@ -7,14 +7,18 @@ import {
   Plus,
   FileText,
   TrendingUp,
-  Clock,
-  Globe,
-  LogOut
+  LogOut,
+  Twitter,
+  MessageCircle,
+  Users,
+  PenTool,
+  Bookmark
 } from "lucide-react"
 import { NavLink, useLocation } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
 import { useAccounts } from "@/hooks/useAccounts"
 import { Button } from "@/components/ui/button"
+import { NewTradeModal } from "./NewTradeModal"
 
 import {
   Sidebar,
@@ -33,13 +37,6 @@ const mainItems = [
   { title: "Dashboard", url: "/", icon: BarChart3 },
   { title: "Stats", url: "/stats", icon: TrendingUp },
   { title: "Calendar", url: "/calendar", icon: Calendar },
-]
-
-const sessionItems = [
-  { title: "Asia ORB", url: "/sessions/asia", icon: Globe },
-  { title: "London ORB", url: "/sessions/london", icon: Clock },
-  { title: "NY Open", url: "/sessions/ny-open", icon: TrendingUp },
-  { title: "NY Close", url: "/sessions/ny-close", icon: FileText },
 ]
 
 const otherItems = [
@@ -86,10 +83,10 @@ export function AppSidebar() {
               <BarChart3 className="w-4 h-4 text-white" />
             </div>
             {!collapsed && (
-              <div>
-                <h2 className="text-lg font-bold text-sidebar-foreground">ORB Journal</h2>
-                <p className="text-xs text-sidebar-foreground/60">Trading Dashboard</p>
-              </div>
+            <div>
+              <h2 className="text-lg font-bold text-sidebar-foreground">PropFirm Journal</h2>
+              <p className="text-xs text-sidebar-foreground/60">Knowledge Dashboard</p>
+            </div>
             )}
           </div>
         </div>
@@ -131,38 +128,64 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Sessions */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Trading Sessions</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {sessionItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url} className={getNavCls}>
-                      <item.icon className="w-4 h-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
         {/* Actions */}
         <SidebarGroup>
+          <SidebarGroupLabel>Actions</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton className="bg-primary text-primary-foreground hover:bg-primary/90">
-                  <Plus className="w-4 h-4" />
-                  {!collapsed && <span>New Trade</span>}
+                <NewTradeModal onTradeAdded={() => window.location.reload()} />
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton className="bg-muted text-muted-foreground hover:bg-muted/80">
+                  <PenTool className="w-4 h-4" />
+                  {!collapsed && <span>New Setup</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton className="bg-amber-500/20 text-amber-500 hover:bg-amber-500/30">
+                  <Bookmark className="w-4 h-4" />
+                  {!collapsed && <span>New Note</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Social Links */}
+        {!collapsed && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Community</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <a href="https://x.com/free_propfirm?s=09" target="_blank" rel="noopener noreferrer" className="hover:bg-sidebar-accent/50">
+                      <Twitter className="w-4 h-4" />
+                      <span>Twitter</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <a href="https://telegram.dog/free_propfirm_accounts" target="_blank" rel="noopener noreferrer" className="hover:bg-sidebar-accent/50">
+                      <MessageCircle className="w-4 h-4" />
+                      <span>Telegram</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <a href="https://discord.gg/7MRsuqqT3n" target="_blank" rel="noopener noreferrer" className="hover:bg-sidebar-accent/50">
+                      <Users className="w-4 h-4" />
+                      <span>Discord</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {/* Other */}
         <SidebarGroup>

@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "12.2.12 (cd3cf9e)"
   }
   public: {
     Tables: {
@@ -174,46 +174,70 @@ export type Database = {
       trades: {
         Row: {
           account_id: string
+          commission: number | null
           created_at: string
           date: string
+          entry_price: number | null
+          exit_price: number | null
           id: string
           image_url: string | null
           is_public: boolean
           notes: string | null
+          pnl_dollar: number | null
+          quantity: number | null
           result: string
           rr: number | null
           session: string
+          setup_tag: string | null
+          side: string | null
           strategy_tag: string | null
+          symbol: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           account_id: string
+          commission?: number | null
           created_at?: string
           date?: string
+          entry_price?: number | null
+          exit_price?: number | null
           id?: string
           image_url?: string | null
           is_public?: boolean
           notes?: string | null
+          pnl_dollar?: number | null
+          quantity?: number | null
           result: string
           rr?: number | null
           session: string
+          setup_tag?: string | null
+          side?: string | null
           strategy_tag?: string | null
+          symbol?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           account_id?: string
+          commission?: number | null
           created_at?: string
           date?: string
+          entry_price?: number | null
+          exit_price?: number | null
           id?: string
           image_url?: string | null
           is_public?: boolean
           notes?: string | null
+          pnl_dollar?: number | null
+          quantity?: number | null
           result?: string
           rr?: number | null
           session?: string
+          setup_tag?: string | null
+          side?: string | null
           strategy_tag?: string | null
+          symbol?: string | null
           updated_at?: string
           user_id?: string
         }
