@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,31 +11,38 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { cn } from "@/lib/utils"
 import { Edit, Trash2, Share, Image } from 'lucide-react'
-
-interface FormattedTrade {
-  id: string
-  date: string
-  symbol: string
-  side: "LONG" | "SHORT"
-  entry_price: number
-  exit_price: number
-  quantity: number
-  setup_tag: string
-  rr: number
-  result: "Win" | "Loss" | "Breakeven"
-  pnl_dollar: number
-  notes?: string
-  image_url?: string
-  commission: number
-}
+import { useTradeActions } from '@/hooks/useTradeActions'
+import { EditTradeModal } from './EditTradeModal'
+import type { Trade } from '@/hooks/useTrades'
 
 interface TradingTableProps {
-  trades: FormattedTrade[]
+  trades: Trade[]
+  onTradeUpdated: () => void
 }
 
-export function TradingTable({ trades }: TradingTableProps) {
+export function TradingTable({ trades, onTradeUpdated }: TradingTableProps) {
+  const { deleteTrade, shareTrade, viewImage, loading } = useTradeActions();
+  const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
+
+  const handleEdit = (trade: Trade) => {
+    setEditingTrade(trade);
+  };
+
+  const handleDelete = async (tradeId: string) => {
+    await deleteTrade(tradeId);
+    onTradeUpdated();
+  };
+
+  const handleShare = (trade: Trade) => {
+    shareTrade(trade);
+  };
+
+  const handleViewImage = (imageUrl: string) => {
+    viewImage(imageUrl);
+  };
   return (
     <Card className="bg-card border-border">
       <CardHeader>
@@ -67,32 +75,40 @@ export function TradingTable({ trades }: TradingTableProps) {
                   transition={{ delay: index * 0.05, duration: 0.3 }}
                   className="border-border hover:bg-muted/50 group"
                 >
-                  <TableCell className="text-foreground">{trade.date}</TableCell>
-                  <TableCell className="font-mono text-foreground font-medium">{trade.symbol}</TableCell>
+                  <TableCell className="text-foreground">{new Date(trade.date).toLocaleDateString()}</TableCell>
+                  <TableCell className="font-mono text-foreground font-medium">{trade.symbol || 'N/A'}</TableCell>
                   <TableCell>
-                    <Badge 
-                      variant={trade.side === "LONG" ? "default" : "secondary"}
-                      className={`${
-                        trade.side === "LONG" 
-                          ? "bg-success text-success-foreground" 
-                          : "bg-destructive text-destructive-foreground"
-                      } transition-colors`}
-                    >
-                      {trade.side}
-                    </Badge>
+                    {trade.side ? (
+                      <Badge 
+                        variant={trade.side === "LONG" ? "default" : "secondary"}
+                        className={`${
+                          trade.side === "LONG" 
+                            ? "bg-success text-success-foreground" 
+                            : "bg-destructive text-destructive-foreground"
+                        } transition-colors`}
+                      >
+                        {trade.side}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">N/A</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-foreground font-mono">
-                    {trade.entry_price.toFixed(5)}
+                    {trade.entry_price ? trade.entry_price.toFixed(5) : 'N/A'}
                   </TableCell>
                   <TableCell className="text-foreground font-mono">
-                    {trade.exit_price.toFixed(5)}
+                    {trade.exit_price ? trade.exit_price.toFixed(5) : 'N/A'}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="border-border text-muted-foreground">
-                      {trade.setup_tag}
-                    </Badge>
+                    {trade.setup_tag ? (
+                      <Badge variant="outline" className="border-border text-muted-foreground">
+                        {trade.setup_tag}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">N/A</span>
+                    )}
                   </TableCell>
-                  <TableCell className="text-foreground">{trade.quantity}</TableCell>
+                  <TableCell className="text-foreground">{trade.quantity || 'N/A'}</TableCell>
                   <TableCell className="text-foreground">
                     {trade.rr ? `1:${trade.rr}` : 'N/A'}
                   </TableCell>
@@ -115,30 +131,80 @@ export function TradingTable({ trades }: TradingTableProps) {
                   </TableCell>
                   <TableCell className={cn(
                     "font-semibold font-mono",
-                    trade.pnl_dollar >= 0 ? "text-success" : "text-destructive"
+                    (trade.pnl_dollar || 0) >= 0 ? "text-success" : "text-destructive"
                   )}>
-                    {trade.pnl_dollar > 0 ? '+' : ''}${trade.pnl_dollar.toFixed(2)}
+                    {trade.pnl_dollar ? (
+                      <>
+                        {trade.pnl_dollar > 0 ? '+' : ''}${trade.pnl_dollar.toFixed(2)}
+                      </>
+                    ) : (
+                      'N/A'
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 hover:bg-primary/10"
+                          onClick={() => handleEdit(trade)}
+                        >
                           <Edit className="h-3 w-3" />
                         </Button>
                       </motion.div>
+                      
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0 hover:bg-destructive/10"
+                              disabled={loading}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </motion.div>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Trade</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this trade? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => handleDelete(trade.id)}
+                              className="bg-destructive hover:bg-destructive/90"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                      
                       <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </motion.div>
-                      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 hover:bg-blue-500/10"
+                          onClick={() => handleShare(trade)}
+                        >
                           <Share className="h-3 w-3" />
                         </Button>
                       </motion.div>
+                      
                       {trade.image_url && (
                         <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0 hover:bg-orange-500/10"
+                            onClick={() => handleViewImage(trade.image_url!)}
+                          >
                             <Image className="h-3 w-3" />
                           </Button>
                         </motion.div>
@@ -157,6 +223,13 @@ export function TradingTable({ trades }: TradingTableProps) {
           </div>
         )}
       </CardContent>
+      
+      <EditTradeModal
+        trade={editingTrade}
+        isOpen={!!editingTrade}
+        onClose={() => setEditingTrade(null)}
+        onTradeUpdated={onTradeUpdated}
+      />
     </Card>
   )
 }

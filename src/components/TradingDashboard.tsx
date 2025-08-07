@@ -326,7 +326,7 @@ export function TradingDashboard() {
     }} transition={{
       delay: 0.9
     }}>
-        <TradingTable trades={formattedTrades} />
+        <TradingTable trades={filteredTrades} onTradeUpdated={refetchTrades} />
       </motion.div>
 
       {/* Demo Notice */}
