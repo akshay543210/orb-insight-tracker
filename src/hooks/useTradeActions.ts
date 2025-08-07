@@ -35,14 +35,15 @@ export function useTradeActions() {
 
   const shareTrade = async (trade: Trade) => {
     try {
-      if (navigator.share) {
+      const shareText = `${trade.side || 'Trade'} ${trade.symbol || ''} - ${trade.result} (${trade.rr ? `1:${trade.rr}` : 'N/A'} R:R)`.trim();
+      
+      if (navigator.share && navigator.canShare && navigator.canShare({ text: shareText })) {
         await navigator.share({
-          title: `Trade on ${trade.symbol}`,
-          text: `${trade.side} ${trade.symbol} - ${trade.result} (${trade.rr ? `1:${trade.rr}` : 'N/A'} R:R)`,
+          title: `Trade on ${trade.symbol || 'Unknown'}`,
+          text: shareText,
         });
       } else {
         // Fallback: copy to clipboard
-        const shareText = `${trade.side} ${trade.symbol} - ${trade.result} (${trade.rr ? `1:${trade.rr}` : 'N/A'} R:R)`;
         await navigator.clipboard.writeText(shareText);
         toast({
           title: "Copied to Clipboard",
@@ -50,12 +51,22 @@ export function useTradeActions() {
         });
       }
     } catch (err) {
-      console.error('Error sharing trade:', err);
-      toast({
-        title: "Error",
-        description: "Failed to share trade",
-        variant: "destructive",
-      });
+      // Final fallback: try copying to clipboard
+      try {
+        const shareText = `${trade.side || 'Trade'} ${trade.symbol || ''} - ${trade.result} (${trade.rr ? `1:${trade.rr}` : 'N/A'} R:R)`.trim();
+        await navigator.clipboard.writeText(shareText);
+        toast({
+          title: "Copied to Clipboard", 
+          description: "Trade details copied to clipboard.",
+        });
+      } catch (clipboardErr) {
+        console.error('Error sharing/copying trade:', err);
+        toast({
+          title: "Error",
+          description: "Failed to share trade details",
+          variant: "destructive",
+        });
+      }
     }
   };
 
