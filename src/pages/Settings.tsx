@@ -13,7 +13,6 @@ const Settings = () => {
   const { accounts, loading, createAccount, updateAccount, deleteAccount, setActiveAccount, getActiveAccount } = useAccounts()
   const [newAccountName, setNewAccountName] = useState("")
   const [newAccountBalance, setNewAccountBalance] = useState("10000")
-  const [newAccountRisk, setNewAccountRisk] = useState("2.0")
   const [editingAccount, setEditingAccount] = useState<any>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -24,15 +23,12 @@ const Settings = () => {
     if (!newAccountName.trim()) return
     
     const balance = parseFloat(newAccountBalance)
-    const risk = parseFloat(newAccountRisk)
     
     if (isNaN(balance) || balance <= 0) return
-    if (isNaN(risk) || risk <= 0) return
 
-    await createAccount(newAccountName, balance, risk)
+    await createAccount(newAccountName, balance, 2.0) // Default risk percentage
     setNewAccountName("")
     setNewAccountBalance("10000")
-    setNewAccountRisk("2.0")
     setIsAddDialogOpen(false)
   }
 
@@ -40,16 +36,14 @@ const Settings = () => {
     if (!editingAccount) return
 
     const balance = parseFloat(editingAccount.current_balance)
-    const risk = parseFloat(editingAccount.risk_per_trade)
     
     if (isNaN(balance) || balance <= 0) return
-    if (isNaN(risk) || risk <= 0) return
 
     await updateAccount(editingAccount.id, {
       name: editingAccount.name,
       current_balance: balance,
       starting_balance: parseFloat(editingAccount.starting_balance) || 0,
-      risk_per_trade: risk,
+      risk_per_trade: editingAccount.risk_per_trade, // Keep existing risk percentage
     })
     setEditingAccount(null)
     setIsEditDialogOpen(false)
@@ -89,10 +83,6 @@ const Settings = () => {
               <span className="text-xl font-bold text-primary-foreground">
                 ${activeAccount.current_balance.toLocaleString()}
               </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-primary-foreground/80">Risk per Trade:</span>
-              <span className="text-primary-foreground">{activeAccount.risk_per_trade}%</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-primary-foreground/80">P&L:</span>
@@ -150,18 +140,6 @@ const Settings = () => {
                       className="bg-input border-border text-card-foreground"
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="accountRisk" className="text-card-foreground">Risk per Trade (%)</Label>
-                    <Input
-                      id="accountRisk"
-                      type="number"
-                      step="0.1"
-                      value={newAccountRisk}
-                      onChange={(e) => setNewAccountRisk(e.target.value)}
-                      placeholder="2.0"
-                      className="bg-input border-border text-card-foreground"
-                    />
-                  </div>
                   <div className="flex gap-2 pt-4">
                     <Button 
                       onClick={handleCreateAccount}
@@ -206,7 +184,7 @@ const Settings = () => {
                         </Badge>
                       )}
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                       <div>
                         <span className="text-muted-foreground">Balance: </span>
                         <span className="text-card-foreground font-medium">
@@ -218,10 +196,6 @@ const Settings = () => {
                         <span className="text-card-foreground font-medium">
                           ${account.starting_balance.toLocaleString()}
                         </span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Risk: </span>
-                        <span className="text-card-foreground font-medium">{account.risk_per_trade}%</span>
                       </div>
                       <div>
                         <span className="text-muted-foreground">P&L: </span>
@@ -330,17 +304,6 @@ const Settings = () => {
                   type="number"
                   value={editingAccount.starting_balance}
                   onChange={(e) => setEditingAccount({...editingAccount, starting_balance: parseFloat(e.target.value) || 0})}
-                  className="bg-input border-border text-card-foreground"
-                />
-              </div>
-              <div>
-                <Label htmlFor="editAccountRisk" className="text-card-foreground">Risk per Trade (%)</Label>
-                <Input
-                  id="editAccountRisk"
-                  type="number"
-                  step="0.1"
-                  value={editingAccount.risk_per_trade}
-                  onChange={(e) => setEditingAccount({...editingAccount, risk_per_trade: parseFloat(e.target.value) || 0})}
                   className="bg-input border-border text-card-foreground"
                 />
               </div>
