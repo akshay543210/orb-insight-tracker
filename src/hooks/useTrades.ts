@@ -22,6 +22,7 @@ export interface Trade {
   is_public?: boolean;
   pnl_dollar?: number;
   commission?: number;
+  risk_percentage?: number;
   created_at: string;
   updated_at: string;
 }
@@ -129,8 +130,10 @@ export function useTrades() {
       return trade.pnl_dollar;
     }
     
-    // Fallback to R:R based calculation
-    const riskAmount = account.starting_balance * (account.risk_per_trade / 100);
+    // Calculate risk amount using trade's risk percentage or account default
+    const riskPercentage = trade.risk_percentage || account.risk_per_trade;
+    const riskAmount = account.current_balance * (riskPercentage / 100);
+    
     if (trade.result.toLowerCase() === 'win') {
       return riskAmount * (trade.rr || 0);
     } else if (trade.result.toLowerCase() === 'loss') {

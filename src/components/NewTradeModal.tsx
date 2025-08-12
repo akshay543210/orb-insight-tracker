@@ -30,14 +30,11 @@ export function NewTradeModal({ onTradeAdded }: NewTradeModalProps) {
     date: new Date().toISOString().split('T')[0],
     symbol: '',
     side: '',
-    entry_price: '',
-    exit_price: '',
-    quantity: '',
     setup_tag: '',
     rr: '',
     result: '',
     notes: '',
-    commission: '0',
+    risk_percentage: '1.0', // Default to 1% risk
   });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,14 +76,11 @@ export function NewTradeModal({ onTradeAdded }: NewTradeModalProps) {
       date: new Date().toISOString().split('T')[0],
       symbol: '',
       side: '',
-      entry_price: '',
-      exit_price: '',
-      quantity: '',
       setup_tag: '',
       rr: '',
       result: '',
       notes: '',
-      commission: '0',
+      risk_percentage: '1.0',
     });
     setImageFile(null);
     setImagePreview(null);
@@ -139,15 +133,12 @@ export function NewTradeModal({ onTradeAdded }: NewTradeModalProps) {
           session: formData.setup_tag || 'Other', // Keep session for compatibility
           symbol: formData.symbol,
           side: formData.side,
-          entry_price: formData.entry_price ? Number(formData.entry_price) : null,
-          exit_price: formData.exit_price ? Number(formData.exit_price) : null,
-          quantity: formData.quantity ? Number(formData.quantity) : null,
           setup_tag: formData.setup_tag || null,
           rr: formData.rr ? Number(formData.rr) : null,
           result: formData.result,
           notes: formData.notes || null,
           image_url: imageUrl,
-          commission: formData.commission ? Number(formData.commission) : 0,
+          risk_percentage: formData.risk_percentage ? Number(formData.risk_percentage) : 1.0,
         });
 
       if (error) {
@@ -260,45 +251,7 @@ export function NewTradeModal({ onTradeAdded }: NewTradeModalProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="entry_price">Entry Price</Label>
-              <Input
-                id="entry_price"
-                type="number"
-                step="0.00001"
-                value={formData.entry_price}
-                onChange={(e) => setFormData({ ...formData, entry_price: e.target.value })}
-                placeholder="0.00000"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="exit_price">Exit Price</Label>
-              <Input
-                id="exit_price"
-                type="number"
-                step="0.00001"
-                value={formData.exit_price}
-                onChange={(e) => setFormData({ ...formData, exit_price: e.target.value })}
-                placeholder="0.00000"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity</Label>
-              <Input
-                id="quantity"
-                type="number"
-                step="0.01"
-                value={formData.quantity}
-                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                placeholder="1.00"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="rr">Risk/Reward Ratio</Label>
               <Input
@@ -311,6 +264,27 @@ export function NewTradeModal({ onTradeAdded }: NewTradeModalProps) {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="risk_percentage">Risk Percentage (%)</Label>
+              <Input
+                id="risk_percentage"
+                type="number"
+                step="0.1"
+                min="0.1"
+                max="10"
+                value={formData.risk_percentage}
+                onChange={(e) => setFormData({ ...formData, risk_percentage: e.target.value })}
+                placeholder="1.0"
+              />
+              {activeAccount && formData.risk_percentage && (
+                <p className="text-xs text-muted-foreground">
+                  Risk Amount: ${(activeAccount.current_balance * (Number(formData.risk_percentage) / 100)).toFixed(2)}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
             <div className="space-y-2">
               <Label htmlFor="result">Result</Label>
               <Select
@@ -327,18 +301,6 @@ export function NewTradeModal({ onTradeAdded }: NewTradeModalProps) {
                   <SelectItem value="Breakeven">Breakeven</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="commission">Commission</Label>
-              <Input
-                id="commission"
-                type="number"
-                step="0.01"
-                value={formData.commission}
-                onChange={(e) => setFormData({ ...formData, commission: e.target.value })}
-                placeholder="0.00"
-              />
             </div>
           </div>
 

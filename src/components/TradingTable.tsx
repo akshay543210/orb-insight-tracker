@@ -56,10 +56,8 @@ export function TradingTable({ trades, onTradeUpdated }: TradingTableProps) {
                 <TableHead className="text-muted-foreground">Date</TableHead>
                 <TableHead className="text-muted-foreground">Symbol</TableHead>
                 <TableHead className="text-muted-foreground">Side</TableHead>
-                <TableHead className="text-muted-foreground">Entry</TableHead>
-                <TableHead className="text-muted-foreground">Exit</TableHead>
                 <TableHead className="text-muted-foreground">Setup Tag</TableHead>
-                <TableHead className="text-muted-foreground">Qty</TableHead>
+                <TableHead className="text-muted-foreground">Risk %</TableHead>
                 <TableHead className="text-muted-foreground">R:R</TableHead>
                 <TableHead className="text-muted-foreground">Result</TableHead>
                 <TableHead className="text-muted-foreground">P&L</TableHead>
@@ -93,12 +91,6 @@ export function TradingTable({ trades, onTradeUpdated }: TradingTableProps) {
                       <span className="text-muted-foreground">N/A</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-foreground font-mono">
-                    {trade.entry_price ? trade.entry_price.toFixed(5) : 'N/A'}
-                  </TableCell>
-                  <TableCell className="text-foreground font-mono">
-                    {trade.exit_price ? Number(trade.exit_price).toFixed(5) : 'N/A'}
-                  </TableCell>
                   <TableCell>
                     {trade.setup_tag ? (
                       <Badge variant="outline" className="border-border text-muted-foreground">
@@ -109,7 +101,7 @@ export function TradingTable({ trades, onTradeUpdated }: TradingTableProps) {
                     )}
                   </TableCell>
                   <TableCell className="text-foreground">
-                    {trade.quantity ? Number(trade.quantity).toString() : 'N/A'}
+                    {trade.risk_percentage ? `${trade.risk_percentage}%` : 'N/A'}
                   </TableCell>
                   <TableCell className="text-foreground">
                     {trade.rr ? `1:${trade.rr}` : 'N/A'}

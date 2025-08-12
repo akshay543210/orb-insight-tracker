@@ -186,6 +186,7 @@ export type Database = {
           pnl_dollar: number | null
           quantity: number | null
           result: string
+          risk_percentage: number | null
           rr: number | null
           session: string
           setup_tag: string | null
@@ -209,6 +210,7 @@ export type Database = {
           pnl_dollar?: number | null
           quantity?: number | null
           result: string
+          risk_percentage?: number | null
           rr?: number | null
           session: string
           setup_tag?: string | null
@@ -232,6 +234,7 @@ export type Database = {
           pnl_dollar?: number | null
           quantity?: number | null
           result?: string
+          risk_percentage?: number | null
           rr?: number | null
           session?: string
           setup_tag?: string | null

@@ -26,14 +26,12 @@ export function EditTradeModal({ trade, isOpen, onClose, onTradeUpdated }: EditT
     date: '',
     symbol: '',
     side: '',
-    entry_price: '',
-    exit_price: '',
-    quantity: '',
     setup_tag: '',
     strategy_tag: '',
     rr: '',
     result: '',
     notes: '',
+    risk_percentage: '',
   });
 
   useEffect(() => {
@@ -42,14 +40,12 @@ export function EditTradeModal({ trade, isOpen, onClose, onTradeUpdated }: EditT
         date: new Date(trade.date).toISOString().split('T')[0],
         symbol: trade.symbol || '',
         side: trade.side || '',
-        entry_price: trade.entry_price?.toString() || '',
-        exit_price: trade.exit_price?.toString() || '',
-        quantity: trade.quantity?.toString() || '',
         setup_tag: trade.setup_tag || '',
         strategy_tag: trade.strategy_tag || '',
         rr: trade.rr?.toString() || '',
         result: trade.result,
         notes: trade.notes || '',
+        risk_percentage: trade.risk_percentage?.toString() || '1.0',
       });
     }
   }, [trade]);
@@ -75,14 +71,12 @@ export function EditTradeModal({ trade, isOpen, onClose, onTradeUpdated }: EditT
         date: new Date(formData.date).toISOString(),
         symbol: formData.symbol || null,
         side: formData.side || null,
-        entry_price: formData.entry_price ? Number(formData.entry_price) : null,
-        exit_price: formData.exit_price ? Number(formData.exit_price) : null,
-        quantity: formData.quantity ? Number(formData.quantity) : null,
         setup_tag: formData.setup_tag || null,
         strategy_tag: formData.strategy_tag || null,
         rr: formData.rr ? Number(formData.rr) : null,
         result: formData.result,
         notes: formData.notes || null,
+        risk_percentage: formData.risk_percentage ? Number(formData.risk_percentage) : null,
       };
 
       const { error } = await supabase
@@ -174,42 +168,6 @@ export function EditTradeModal({ trade, isOpen, onClose, onTradeUpdated }: EditT
             </div>
 
             <div>
-              <Label htmlFor="entry_price">Entry Price</Label>
-              <Input
-                id="entry_price"
-                type="number"
-                step="0.00001"
-                value={formData.entry_price}
-                onChange={(e) => handleInputChange('entry_price', e.target.value)}
-                placeholder="1.23456"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="exit_price">Exit Price</Label>
-              <Input
-                id="exit_price"
-                type="number"
-                step="0.00001"
-                value={formData.exit_price}
-                onChange={(e) => handleInputChange('exit_price', e.target.value)}
-                placeholder="1.23456"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="quantity">Quantity</Label>
-              <Input
-                id="quantity"
-                type="number"
-                step="0.01"
-                value={formData.quantity}
-                onChange={(e) => handleInputChange('quantity', e.target.value)}
-                placeholder="1.00"
-              />
-            </div>
-
-            <div>
               <Label htmlFor="strategy_tag">Strategy Tag</Label>
               <Input
                 id="strategy_tag"
@@ -229,6 +187,25 @@ export function EditTradeModal({ trade, isOpen, onClose, onTradeUpdated }: EditT
                 onChange={(e) => handleInputChange('rr', e.target.value)}
                 placeholder="2.0"
               />
+            </div>
+
+            <div>
+              <Label htmlFor="risk_percentage">Risk Percentage (%)</Label>
+              <Input
+                id="risk_percentage"
+                type="number"
+                step="0.1"
+                min="0.1"
+                max="10"
+                value={formData.risk_percentage}
+                onChange={(e) => handleInputChange('risk_percentage', e.target.value)}
+                placeholder="1.0"
+              />
+              {activeAccount && formData.risk_percentage && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Risk Amount: ${(activeAccount.current_balance * (Number(formData.risk_percentage) / 100)).toFixed(2)}
+                </p>
+              )}
             </div>
 
             <div>

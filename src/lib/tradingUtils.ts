@@ -26,7 +26,9 @@ export const calculatePnL = (
     return Number(trade.pnl_dollar);
   }
   
-  const riskAmount = account.starting_balance * (account.risk_per_trade / 100);
+  // Use trade's risk percentage or account default, calculate from current balance
+  const riskPercentage = trade.risk_percentage || account.risk_per_trade;
+  const riskAmount = account.current_balance * (riskPercentage / 100);
   
   switch (trade.result.toLowerCase()) {
     case 'win':
