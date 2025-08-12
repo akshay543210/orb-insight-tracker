@@ -20,7 +20,7 @@ const Stats = () => {
     })
     
     const totalRR = dayTrades.reduce((sum, trade) => {
-      const rr = trade.rr || 0
+      const rr = Number(trade.rr) || 0
       return sum + (trade.result.toLowerCase() === 'win' ? rr : trade.result.toLowerCase() === 'loss' ? -rr : 0)
     }, 0)
     
@@ -34,7 +34,7 @@ const Stats = () => {
     )
     
     const totalRR = sessionTrades.reduce((sum, trade) => {
-      const rr = trade.rr || 0
+      const rr = Number(trade.rr) || 0
       return sum + (trade.result.toLowerCase() === 'win' ? rr : trade.result.toLowerCase() === 'loss' ? -rr : 0)
     }, 0)
     

@@ -212,10 +212,16 @@ export function RecentTradesTable({ trades, onTradeUpdate }: RecentTradesTablePr
   const calculatePnL = (trade: Trade) => {
     if (!activeAccount) return 0;
     
+    // Use actual pnl_dollar if available
+    if (trade.pnl_dollar !== null && trade.pnl_dollar !== undefined) {
+      return Number(trade.pnl_dollar);
+    }
+    
+    // Fallback to R:R based calculation
     const riskAmount = activeAccount.starting_balance * (activeAccount.risk_per_trade / 100);
     
     if (trade.result === 'Win') {
-      return riskAmount * (trade.rr || 0);
+      return riskAmount * Number(trade.rr || 0);
     } else if (trade.result === 'Loss') {
       return -riskAmount;
     } else {

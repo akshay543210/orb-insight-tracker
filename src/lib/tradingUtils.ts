@@ -21,11 +21,16 @@ export const calculatePnL = (
   trade: { result: string; rr?: number | null },
   account: { starting_balance: number; risk_per_trade: number }
 ): number => {
+  // If trade has pnl_dollar, use that directly
+  if ('pnl_dollar' in trade && trade.pnl_dollar !== null && trade.pnl_dollar !== undefined) {
+    return Number(trade.pnl_dollar);
+  }
+  
   const riskAmount = account.starting_balance * (account.risk_per_trade / 100);
   
   switch (trade.result.toLowerCase()) {
     case 'win':
-      return riskAmount * (trade.rr || 0);
+      return riskAmount * Number(trade.rr || 0);
     case 'loss':
       return -riskAmount;
     default:

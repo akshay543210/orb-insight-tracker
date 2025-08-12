@@ -63,6 +63,10 @@ const Calendar = () => {
     const dayTrades = getTradesForDay(day);
     if (!activeAccount || dayTrades.length === 0) return 0;
     return dayTrades.reduce((total, trade) => {
+      // Use actual pnl_dollar if available, otherwise use calculatePnL
+      if (trade.pnl_dollar !== null && trade.pnl_dollar !== undefined) {
+        return total + Number(trade.pnl_dollar);
+      }
       return total + calculatePnL(trade, activeAccount);
     }, 0);
   };
@@ -75,6 +79,10 @@ const Calendar = () => {
       return tradeDate >= weekStart && tradeDate <= weekEnd;
     });
     const weekPnL = activeAccount ? weekTrades.reduce((total, trade) => {
+      // Use actual pnl_dollar if available, otherwise use calculatePnL
+      if (trade.pnl_dollar !== null && trade.pnl_dollar !== undefined) {
+        return total + Number(trade.pnl_dollar);
+      }
       return total + calculatePnL(trade, activeAccount);
     }, 0) : 0;
     return {
