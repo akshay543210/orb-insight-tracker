@@ -139,15 +139,15 @@ export function NewTradeModal({ onTradeAdded }: NewTradeModalProps) {
           session: formData.setup_tag || 'Other', // Keep session for compatibility
           symbol: formData.symbol,
           side: formData.side,
-          entry_price: formData.entry_price ? parseFloat(formData.entry_price) : null,
-          exit_price: formData.exit_price ? parseFloat(formData.exit_price) : null,
-          quantity: formData.quantity ? parseFloat(formData.quantity) : null,
+          entry_price: formData.entry_price ? Number(formData.entry_price) : null,
+          exit_price: formData.exit_price ? Number(formData.exit_price) : null,
+          quantity: formData.quantity ? Number(formData.quantity) : null,
           setup_tag: formData.setup_tag || null,
-          rr: formData.rr ? parseFloat(formData.rr) : null,
+          rr: formData.rr ? Number(formData.rr) : null,
           result: formData.result,
           notes: formData.notes || null,
           image_url: imageUrl,
-          commission: formData.commission ? parseFloat(formData.commission) : 0,
+          commission: formData.commission ? Number(formData.commission) : 0,
         });
 
       if (error) {

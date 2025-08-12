@@ -97,7 +97,7 @@ export function TradingTable({ trades, onTradeUpdated }: TradingTableProps) {
                     {trade.entry_price ? trade.entry_price.toFixed(5) : 'N/A'}
                   </TableCell>
                   <TableCell className="text-foreground font-mono">
-                    {trade.exit_price ? trade.exit_price.toFixed(5) : 'N/A'}
+                    {trade.exit_price ? Number(trade.exit_price).toFixed(5) : 'N/A'}
                   </TableCell>
                   <TableCell>
                     {trade.setup_tag ? (
@@ -108,7 +108,9 @@ export function TradingTable({ trades, onTradeUpdated }: TradingTableProps) {
                       <span className="text-muted-foreground">N/A</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-foreground">{trade.quantity || 'N/A'}</TableCell>
+                  <TableCell className="text-foreground">
+                    {trade.quantity ? Number(trade.quantity).toString() : 'N/A'}
+                  </TableCell>
                   <TableCell className="text-foreground">
                     {trade.rr ? `1:${trade.rr}` : 'N/A'}
                   </TableCell>
@@ -131,11 +133,11 @@ export function TradingTable({ trades, onTradeUpdated }: TradingTableProps) {
                   </TableCell>
                   <TableCell className={cn(
                     "font-semibold font-mono",
-                    (trade.pnl_dollar || 0) >= 0 ? "text-success" : "text-destructive"
+                    Number(trade.pnl_dollar || 0) >= 0 ? "text-success" : "text-destructive"
                   )}>
-                    {trade.pnl_dollar ? (
+                    {trade.pnl_dollar !== null && trade.pnl_dollar !== undefined ? (
                       <>
-                        {trade.pnl_dollar > 0 ? '+' : ''}${trade.pnl_dollar.toFixed(2)}
+                        {Number(trade.pnl_dollar) > 0 ? '+' : ''}${Number(trade.pnl_dollar).toFixed(2)}
                       </>
                     ) : (
                       'N/A'

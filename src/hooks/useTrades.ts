@@ -124,8 +124,13 @@ export function useTrades() {
   const calculatePnL = useCallback((trade: Trade, account?: Account): number => {
     if (!account) return 0;
     
-    const riskAmount = account.starting_balance * (account.risk_per_trade / 100);
+    // Use the actual pnl_dollar if available, otherwise calculate based on R:R
+    if (trade.pnl_dollar !== null && trade.pnl_dollar !== undefined) {
+      return trade.pnl_dollar;
+    }
     
+    // Fallback to R:R based calculation
+    const riskAmount = account.starting_balance * (account.risk_per_trade / 100);
     if (trade.result.toLowerCase() === 'win') {
       return riskAmount * (trade.rr || 0);
     } else if (trade.result.toLowerCase() === 'loss') {

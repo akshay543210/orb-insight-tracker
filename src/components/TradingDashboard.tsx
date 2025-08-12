@@ -120,16 +120,16 @@ export function TradingDashboard() {
     date: new Date(trade.date).toLocaleDateString(),
     symbol: trade.symbol || 'N/A',
     side: trade.side as "LONG" | "SHORT" || 'LONG',
-    entry_price: trade.entry_price || 0,
-    exit_price: trade.exit_price || 0,
-    quantity: trade.quantity || 0,
+    entry_price: Number(trade.entry_price) || 0,
+    exit_price: Number(trade.exit_price) || 0,
+    quantity: Number(trade.quantity) || 0,
     setup_tag: trade.setup_tag || trade.session || 'N/A',
-    rr: trade.rr || 0,
+    rr: Number(trade.rr) || 0,
     result: trade.result as "Win" | "Loss" | "Breakeven" || 'Breakeven',
-    pnl_dollar: trade.pnl_dollar || 0,
+    pnl_dollar: Number(trade.pnl_dollar) || 0,
     notes: trade.notes,
     image_url: trade.image_url,
-    commission: trade.commission || 0
+    commission: Number(trade.commission) || 0
   }));
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">
