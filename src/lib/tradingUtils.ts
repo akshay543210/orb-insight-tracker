@@ -18,11 +18,11 @@ export const formatRR = (rr: number | null): string => {
 };
 
 export const calculatePnL = (
-  trade: { result: string; rr?: number | null },
-  account: { starting_balance: number; risk_per_trade: number }
+  trade: { result: string; rr?: number | null; pnl_dollar?: number | null; risk_percentage?: number | null },
+  account: { starting_balance: number; risk_per_trade: number; current_balance: number }
 ): number => {
   // If trade has pnl_dollar, use that directly
-  if ('pnl_dollar' in trade && trade.pnl_dollar !== null && trade.pnl_dollar !== undefined) {
+  if (trade.pnl_dollar !== null && trade.pnl_dollar !== undefined) {
     return Number(trade.pnl_dollar);
   }
   

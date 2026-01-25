@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
@@ -186,7 +186,6 @@ export type Database = {
           pnl_dollar: number | null
           quantity: number | null
           result: string
-          risk_percentage: number | null
           rr: number | null
           session: string
           setup_tag: string | null
@@ -210,7 +209,6 @@ export type Database = {
           pnl_dollar?: number | null
           quantity?: number | null
           result: string
-          risk_percentage?: number | null
           rr?: number | null
           session: string
           setup_tag?: string | null
@@ -234,7 +232,6 @@ export type Database = {
           pnl_dollar?: number | null
           quantity?: number | null
           result?: string
-          risk_percentage?: number | null
           rr?: number | null
           session?: string
           setup_tag?: string | null
@@ -280,10 +277,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_admin: { Args: never; Returns: boolean }
       recalculate_account_balance: {
         Args: { account_id_param: string }
         Returns: undefined

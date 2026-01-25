@@ -20,6 +20,7 @@ interface EditTradeModalProps {
 export function EditTradeModal({ trade, isOpen, onClose, onTradeUpdated }: EditTradeModalProps) {
   const { toast } = useToast();
   const { getActiveAccount } = useAccounts();
+  const activeAccount = getActiveAccount();
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
